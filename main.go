@@ -1,6 +1,7 @@
 package OPQBot
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/asmcos/requests"
 	"github.com/goinggo/mapstructure"
@@ -36,10 +37,18 @@ func (b *BotManager) Start() error {
 		return err
 	}
 	_ = c.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
-		log.Println("连接成功！")
+		// log.Println("连接成功！")
+		f, ok := b.onEvent[EventNameOnConnected]
+		if ok {
+			f.Call([]reflect.Value{})
+		}
 	})
 	_ = c.On(gosocketio.OnDisconnection, func(h *gosocketio.Channel) {
-		log.Println("连接断开！")
+		// log.Println("连接断开！")
+		f, ok := b.onEvent[EventNameOnDisconnected]
+		if ok {
+			f.Call([]reflect.Value{})
+		}
 	})
 	_ = c.On("OnGroupMsgs", func(h *gosocketio.Channel, args returnPack) {
 		if args.CurrentQQ != b.QQ {
@@ -220,14 +229,24 @@ func (b *BotManager) Stop() {
 }
 
 // 撤回消息
-func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) {
+func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) error {
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=PbMessageSvc.PbMsgWithDraw&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": GroupID, "MsgSeq": MsgSeq, "MsgRandom": MsgRandom})
 	if err != nil {
-		log.Println(err.Error())
-		return
+		// log.Println(err.Error())
+		return err
 	}
-	log.Println(res.Text())
+	var result Result
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	} else {
+		return nil
+	}
 }
+
 func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 	fVal := reflect.ValueOf(f)
 	if fVal.Kind() != reflect.Func {
@@ -255,8 +274,19 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 		okStruck = "OPQBot.GroupShutPack"
 	case EventNameOnGroupSystemNotify:
 		okStruck = "OPQBot.GroupSystemNotifyPack"
+	case EventNameOnDisconnected:
+		okStruck = "ok"
+	case EventNameOnConnected:
+		okStruck = "ok"
 	default:
-		okStruck = ""
+		return errors.New("Unknown EventName ")
+	}
+
+	if fVal.Type().NumIn() == 0 && okStruck == "ok" {
+		b.locker.Lock()
+		defer b.locker.Unlock()
+		b.onEvent[EventName] = fVal
+		return nil
 	}
 	if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
 		return errors.New("FuncError, Your Function Should Have " + okStruck)
@@ -425,6 +455,8 @@ OuterLoop:
 				continue OuterLoop
 			}
 		}
+		tmp, _ := json.Marshal(sendJsonPack)
+		log.Println(string(tmp))
 		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
 		if err != nil {
 			log.Println(err.Error())

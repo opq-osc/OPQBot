@@ -25,6 +25,8 @@ const (
 	EventNameOnGroupRevoke         = "ON_EVENT_GROUP_REVOKE"
 	EventNameOnGroupShut           = "ON_EVENT_GROUP_SHUT"
 	EventNameOnGroupSystemNotify   = "ON_EVENT_GROUP_SYSTEMNOTIFY"
+	EventNameOnConnected           = "connection"
+	EventNameOnDisconnected        = "disconnection"
 )
 
 type SendMsgPack struct {
@@ -308,4 +310,9 @@ type GroupSystemNotifyPack struct {
 		Content    string      `json:"Content"`
 		RedBaginfo interface{} `json:"RedBaginfo"`
 	} `json:"EventMsg"`
+}
+
+type Result struct {
+	Msg string `json:"Msg"`
+	Ret int    `json:"Ret"`
 }
