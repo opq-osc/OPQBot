@@ -1,9 +1,9 @@
 package OPQBot
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/asmcos/requests"
+	"github.com/goinggo/mapstructure"
 	"github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
 	"log"
@@ -49,7 +49,13 @@ func (b *BotManager) Start() error {
 		defer b.locker.RUnlock()
 		f, ok := b.onEvent["OnGroupMsgs"]
 		if ok {
-			f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args.CurrentPacket)})
+			result := GroupMsgPack{}
+			err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+			if err != nil {
+				log.Println("解析包错误")
+				return
+			}
+			f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 		}
 		//log.Println(args)
 	})
@@ -61,13 +67,136 @@ func (b *BotManager) Start() error {
 		defer b.locker.RUnlock()
 		f, ok := b.onEvent["OnFriendMsgs"]
 		if ok {
-			f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args.CurrentPacket)})
+			result := FriendMsgPack{}
+			err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+			if err != nil {
+				log.Println("解析包错误")
+				return
+			}
+			f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 		}
 		//log.Println(args)
 	})
-	_ = c.On("OnEvents", func(h *gosocketio.Channel, args interface{}) {
-		tmp, _ := json.Marshal(args)
-		log.Println(string(tmp))
+	_ = c.On("OnEvents", func(h *gosocketio.Channel, args eventPack) {
+		if args.CurrentQQ != b.QQ {
+			return
+		}
+		e, ok := args.CurrentPacket.Data.(map[string]interface{})
+		if !ok {
+			log.Println("解析出错")
+			return
+		}
+		e1, ok := e["EventName"].(string)
+		if !ok {
+			log.Println("解析出错")
+			return
+		}
+		switch e1 {
+		case EventNameOnGroupJoin:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupJoin]
+			if ok {
+				result := GroupJoinPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupAdmin:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupAdmin]
+			if ok {
+				result := GroupAdminPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupExit:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupExit]
+			if ok {
+				result := GroupExitPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupExitSuccess:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupExitSuccess]
+			if ok {
+				result := GroupExitSuccessPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupAdminSysNotify:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupAdminSysNotify]
+			if ok {
+				result := GroupAdminSysNotifyPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupRevoke:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupRevoke]
+			if ok {
+				result := GroupRevokePack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupShut:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupShut]
+			if ok {
+				result := GroupShutPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		case EventNameOnGroupSystemNotify:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnGroupSystemNotify]
+			if ok {
+				result := GroupSystemNotifyPack{}
+				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
+				if err != nil {
+					log.Println("解析包错误")
+					return
+				}
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			}
+		}
 	})
 
 	return nil
@@ -107,15 +236,30 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 	var okStruck string
 	switch EventName {
 	case EventNameOnFriendMessage:
-		okStruck = "OPQBot.CurrentPacket"
+		okStruck = "OPQBot.FriendMsgPack"
 	case EventNameOnGroupMessage:
-		okStruck = "OPQBot.CurrentPacket"
+		okStruck = "OPQBot.GroupMsgPack"
+	case EventNameOnGroupJoin:
+		okStruck = "OPQBot.GroupJoinPack"
+	case EventNameOnGroupAdmin:
+		okStruck = "OPQBot.GroupAdminPack"
+	case EventNameOnGroupExit:
+		okStruck = "OPQBot.GroupExitPack"
+	case EventNameOnGroupExitSuccess:
+		okStruck = "OPQBot.GroupExitSuccessPack"
+	case EventNameOnGroupAdminSysNotify:
+		okStruck = "OPQBot.GroupAdminSysNotifyPack"
+	case EventNameOnGroupRevoke:
+		okStruck = "OPQBot.GroupRevokePack"
+	case EventNameOnGroupShut:
+		okStruck = "OPQBot.GroupShutPack"
+	case EventNameOnGroupSystemNotify:
+		okStruck = "OPQBot.GroupSystemNotifyPack"
 	default:
 		okStruck = ""
 	}
-	log.Println(fVal.Type().In(1).String())
 	if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
-		return errors.New("FuncError")
+		return errors.New("FuncError, Your Function Should Have " + okStruck)
 	}
 
 	b.locker.Lock()
