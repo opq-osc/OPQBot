@@ -11,7 +11,7 @@ OPQBot
 `go get github.com/mcoo/OPQBot`
 ### Example
 ```golang
-opqBot := OPQBot.NewBotManager("http://192.168.2.2:8899",config.Sysconfig.OPQBotUrl)
+opqBot := OPQBot.NewBotManager(QQ,"http://192.168.2.2:8899")
 err := opqBot.Start()
 if err != nil {
     log.Println(err_opq.Error())
