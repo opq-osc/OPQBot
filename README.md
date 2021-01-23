@@ -7,7 +7,8 @@ OPQBot
 |群消息处理事件|是|
 |好友消息处理事件|是|
 |机器人事件处理|否|
-
+### Install
+`go get github.com/mcoo/OPQBot`
 ### Example
 ```golang
 opqBot := OPQBot.NewBotManager("http://192.168.2.2:8899",config.Sysconfig.OPQBotUrl)
