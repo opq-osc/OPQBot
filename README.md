@@ -54,4 +54,4 @@ func main()  {
 }
 ```
 
-更多请看wiki
+更多请看 ./example/main.go
