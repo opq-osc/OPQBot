@@ -247,6 +247,41 @@ func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) error {
 	}
 }
 
+// 刷新Key
+func (b *BotManager) RefreshKey() error {
+	res, err := requests.Get(b.OPQUrl + "/v1/RefreshKeys?qq=" + strconv.FormatInt(b.QQ, 10))
+	if err != nil {
+		// log.Println(err.Error())
+		return err
+	}
+	var result Result
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	} else {
+		return nil
+	}
+}
+
+// 获取用户信息
+func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
+	var result UserInfo
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SummaryCard.ReqSummaryCard&qq="+strconv.FormatInt(b.QQ, 10), map[string]int64{"UserID": qq})
+	if err != nil {
+		// log.Println(err.Error())
+		return result, err
+	}
+	log.Println(res.Text())
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 	fVal := reflect.ValueOf(f)
 	if fVal.Kind() != reflect.Func {

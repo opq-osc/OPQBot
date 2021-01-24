@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"github.com/asmcos/requests"
 	"github.com/mcoo/OPQBot"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,13 +19,26 @@ func main() {
 	defer opqBot.Stop()
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
-			if packet.Content == "#菜单" {
+			if packet.Content == "二次元图片" {
+				res, err := requests.Get("http://www.dmoe.cc/random.php?return=json")
+				if err != nil {
+					return
+				}
+				var pixivPic Pic
+				_ = res.Json(&pixivPic)
 				opqBot.Send(OPQBot.SendMsgPack{
-					SendType:   OPQBot.SendTypeTextMsg,
+					SendType:   OPQBot.SendTypePicMsgByUrl,
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  int64(packet.FromGroupID),
-					Content:    OPQBot.SendTypeTextMsgContent{Content: `HelloWorld`},
+					Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "随机", PicUrl: pixivPic.Imgurl},
 				})
+				return
+			}
+			if packet.Content == "刷新" && packet.FromUserID == 2435932516 {
+				err := opqBot.RefreshKey()
+				if err != nil {
+					log.Println(err.Error())
+				}
 			}
 		}
 		log.Println(botQQ, packet)
@@ -30,14 +47,41 @@ func main() {
 		log.Println(err.Error())
 	}
 	err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet OPQBot.FriendMsgPack) {
-		if packet.FromUin != opqBot.QQ {
-			if packet.Content == "1" {
-				opqBot.Send(OPQBot.SendMsgPack{
-					SendType:   OPQBot.SendTypeTextMsg,
-					SendToType: OPQBot.SendToTypeFriend,
-					ToUserUid:  int64(packet.FromUin),
-					Content:    OPQBot.SendTypeTextMsgContent{Content: "你好"},
-				})
+		if c := strings.Split(packet.Content, " "); len(c) >= 2 {
+			if c[0] == "#查询" {
+				log.Println(c[1])
+				qq, err := strconv.ParseInt(c[1], 10, 64)
+				if err != nil {
+					opqBot.Send(OPQBot.SendMsgPack{
+						SendType:   OPQBot.SendTypeTextMsg,
+						SendToType: OPQBot.SendToTypeFriend,
+						ToUserUid:  int64(packet.FromUin),
+						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
+					})
+				}
+				user, err := opqBot.GetUserInfo(qq)
+				log.Println(user)
+				if err != nil {
+					opqBot.Send(OPQBot.SendMsgPack{
+						SendType:   OPQBot.SendTypeTextMsg,
+						SendToType: OPQBot.SendToTypeFriend,
+						ToUserUid:  int64(packet.FromUin),
+						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
+					})
+				} else {
+					var sex string
+					if user.Sex == 1 {
+						sex = "女"
+					} else {
+						sex = "男"
+					}
+					opqBot.Send(OPQBot.SendMsgPack{
+						SendType:   OPQBot.SendTypeTextMsg,
+						SendToType: OPQBot.SendToTypeFriend,
+						ToUserUid:  int64(packet.FromUin),
+						Content:    OPQBot.SendTypeTextMsgContent{Content: fmt.Sprintf("用户:%s[%d]%s\n来自:%s\n年龄:%d\n被赞了:%d次\n", user.NickName, user.QQUin, sex, user.Province+user.City, user.Age, user.LikeNums)},
+					})
+				}
 			}
 		}
 		log.Println(botQQ, packet)
@@ -70,4 +114,11 @@ func main() {
 	//	Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "你好", PicUrl: "https://img-home.csdnimg.cn/images/20201124032511.png"},
 	//})
 	time.Sleep(1 * time.Hour)
+}
+
+type Pic struct {
+	Code   string `json:"code"`
+	Imgurl string `json:"imgurl"`
+	Width  string `json:"width"`
+	Height string `json:"height"`
 }

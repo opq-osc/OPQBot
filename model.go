@@ -150,7 +150,7 @@ type currentPacket struct {
 }
 type GroupMsgPack struct {
 	Content       string      `json:"Content"`
-	FromGroupID   int         `json:"FromGroupId"`
+	FromGroupID   int64       `json:"FromGroupId"`
 	FromGroupName string      `json:"FromGroupName"`
 	FromNickName  string      `json:"FromNickName"`
 	FromUserID    int64       `json:"FromUserId"`
@@ -179,11 +179,11 @@ type eventPack struct {
 type GroupJoinPack struct {
 	EventData struct {
 		InviteUin int64  `json:"InviteUin"`
-		UserID    int    `json:"UserID"`
+		UserID    int64  `json:"UserID"`
 		UserName  string `json:"UserName"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
+		FromUin    int64       `json:"FromUin"`
 		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
@@ -195,11 +195,11 @@ type GroupJoinPack struct {
 type GroupAdminPack struct {
 	EventData struct {
 		Flag    int   `json:"Flag"`
-		GroupID int   `json:"GroupID"`
+		GroupID int64 `json:"GroupID"`
 		UserID  int64 `json:"UserID"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
+		FromUin    int64       `json:"FromUin"`
 		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
@@ -213,7 +213,7 @@ type GroupExitPack struct {
 		UserID int64 `json:"UserID"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
+		FromUin    int64       `json:"FromUin"`
 		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
@@ -223,11 +223,11 @@ type GroupExitPack struct {
 }
 type GroupExitSuccessPack struct {
 	EventData struct {
-		GroupID int `json:"GroupID"`
+		GroupID int64 `json:"GroupID"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
-		ToUin      int         `json:"ToUin"`
+		FromUin    int64       `json:"FromUin"`
+		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
 		Content    string      `json:"Content"`
@@ -247,7 +247,7 @@ type GroupAdminSysNotifyPack struct {
 		RefuseContent   string `json:"RefuseContent"`
 		Flag7           int    `json:"Flag_7"`
 		Flag8           int    `json:"Flag_8"`
-		GroupID         int    `json:"GroupId"`
+		GroupID         int64  `json:"GroupId"`
 		GroupName       string `json:"GroupName"`
 		ActionUin       int    `json:"ActionUin"`
 		ActionName      string `json:"ActionName"`
@@ -255,8 +255,8 @@ type GroupAdminSysNotifyPack struct {
 		Action          int    `json:"Action"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
-		ToUin      int         `json:"ToUin"`
+		FromUin    int64       `json:"FromUin"`
+		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
 		Content    string      `json:"Content"`
@@ -267,14 +267,14 @@ type GroupAdminSysNotifyPack struct {
 type GroupRevokePack struct {
 	EventData struct {
 		AdminUserID int   `json:"AdminUserID"`
-		GroupID     int   `json:"GroupID"`
+		GroupID     int64 `json:"GroupID"`
 		MsgRandom   int64 `json:"MsgRandom"`
 		MsgSeq      int   `json:"MsgSeq"`
-		UserID      int   `json:"UserID"`
+		UserID      int64 `json:"UserID"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
-		ToUin      int         `json:"ToUin"`
+		FromUin    int64       `json:"FromUin"`
+		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
 		Content    string      `json:"Content"`
@@ -283,13 +283,13 @@ type GroupRevokePack struct {
 }
 type GroupShutPack struct {
 	EventData struct {
-		GroupID  int   `json:"GroupID"`
+		GroupID  int64 `json:"GroupID"`
 		ShutTime int   `json:"ShutTime"`
 		UserID   int64 `json:"UserID"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
-		ToUin      int         `json:"ToUin"`
+		FromUin    int64       `json:"FromUin"`
+		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
 		Content    string      `json:"Content"`
@@ -299,12 +299,12 @@ type GroupShutPack struct {
 type GroupSystemNotifyPack struct {
 	EventData struct {
 		Content string `json:"Content"`
-		GroupID int    `json:"GroupID"`
-		UserID  int    `json:"UserID"`
+		GroupID int64  `json:"GroupID"`
+		UserID  int64  `json:"UserID"`
 	} `json:"EventData"`
 	EventMsg struct {
-		FromUin    int         `json:"FromUin"`
-		ToUin      int         `json:"ToUin"`
+		FromUin    int64       `json:"FromUin"`
+		ToUin      int64       `json:"ToUin"`
 		MsgType    string      `json:"MsgType"`
 		MsgSeq     int         `json:"MsgSeq"`
 		Content    string      `json:"Content"`
@@ -315,4 +315,15 @@ type GroupSystemNotifyPack struct {
 type Result struct {
 	Msg string `json:"Msg"`
 	Ret int    `json:"Ret"`
+}
+type UserInfo struct {
+	Age       int    `json:"Age"`
+	City      string `json:"City"`
+	LikeNums  int    `json:"LikeNums"`
+	LoginDays int    `json:"LoginDays"`
+	NickName  string `json:"NickName"`
+	Province  string `json:"Province"`
+	QQLevel   int    `json:"QQLevel"`
+	QQUin     int64  `json:"QQUin"`
+	Sex       int    `json:"Sex"`
 }
