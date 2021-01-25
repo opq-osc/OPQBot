@@ -8,6 +8,9 @@ OPQBot
 |好友消息处理事件|是|
 |机器人事件处理|是|
 |所有支持的消息发送|是|
+|At|是|
+|表情|是|
+|撤回|是|
 ### Install
 `go get github.com/mcoo/OPQBot`
 ### Example
@@ -54,4 +57,4 @@ func main()  {
 }
 ```
 
-更多请看 ./example/main.go
+更多请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
