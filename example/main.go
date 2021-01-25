@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var ZanNote = map[int64]int{}
+
 func main() {
 	opqBot := OPQBot.NewBotManager(2629326992, "http://192.168.2.2:8899")
 	err := opqBot.Start()
@@ -19,6 +21,35 @@ func main() {
 	defer opqBot.Stop()
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
+			if packet.Content == "赞我" {
+				i, ok := ZanNote[packet.FromUserID]
+				if ok {
+					if i == time.Now().Day() {
+						opqBot.Send(OPQBot.SendMsgPack{
+							SendType:   OPQBot.SendTypeTextMsg,
+							SendToType: OPQBot.SendToTypeGroup,
+							ToUserUid:  packet.FromGroupID,
+							Content:    OPQBot.SendTypeTextMsgContent{Content: "今日已赞!"},
+						})
+						return
+					}
+				}
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendType:   OPQBot.SendTypeTextMsg,
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypeTextMsgContent{Content: "正在赞请稍后！"},
+				})
+				success := opqBot.Zan(packet.FromUserID, 50)
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendType:   OPQBot.SendTypeTextMsg,
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypeTextMsgContent{Content: "成功赞了" + strconv.Itoa(success) + "次"},
+				})
+				ZanNote[packet.FromUserID] = time.Now().Day()
+				return
+			}
 			if packet.Content == "二次元图片" {
 				res, err := requests.Get("http://www.dmoe.cc/random.php?return=json")
 				if err != nil {
@@ -47,6 +78,35 @@ func main() {
 		log.Println(err.Error())
 	}
 	err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet OPQBot.FriendMsgPack) {
+		if packet.Content == "赞我" {
+			i, ok := ZanNote[packet.FromUin]
+			if ok {
+				if i == time.Now().Day() {
+					opqBot.Send(OPQBot.SendMsgPack{
+						SendType:   OPQBot.SendTypeTextMsg,
+						SendToType: OPQBot.SendToTypeFriend,
+						ToUserUid:  packet.FromUin,
+						Content:    OPQBot.SendTypeTextMsgContent{Content: "今日已赞!"},
+					})
+					return
+				}
+			}
+			opqBot.Send(OPQBot.SendMsgPack{
+				SendType:   OPQBot.SendTypeTextMsg,
+				SendToType: OPQBot.SendToTypeFriend,
+				ToUserUid:  packet.FromUin,
+				Content:    OPQBot.SendTypeTextMsgContent{Content: "正在赞请稍后！"},
+			})
+			success := opqBot.Zan(packet.FromUin, 50)
+			opqBot.Send(OPQBot.SendMsgPack{
+				SendType:   OPQBot.SendTypeTextMsg,
+				SendToType: OPQBot.SendToTypeFriend,
+				ToUserUid:  packet.FromUin,
+				Content:    OPQBot.SendTypeTextMsgContent{Content: "成功赞了" + strconv.Itoa(success) + "次"},
+			})
+			ZanNote[packet.FromUin] = time.Now().Day()
+			return
+		}
 		if c := strings.Split(packet.Content, " "); len(c) >= 2 {
 			if c[0] == "#查询" {
 				log.Println(c[1])
@@ -55,7 +115,7 @@ func main() {
 					opqBot.Send(OPQBot.SendMsgPack{
 						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
-						ToUserUid:  int64(packet.FromUin),
+						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
 					})
 				}
@@ -65,7 +125,7 @@ func main() {
 					opqBot.Send(OPQBot.SendMsgPack{
 						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
-						ToUserUid:  int64(packet.FromUin),
+						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
 					})
 				} else {
@@ -78,7 +138,7 @@ func main() {
 					opqBot.Send(OPQBot.SendMsgPack{
 						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
-						ToUserUid:  int64(packet.FromUin),
+						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: fmt.Sprintf("用户:%s[%d]%s\n来自:%s\n年龄:%d\n被赞了:%d次\n", user.NickName, user.QQUin, sex, user.Province+user.City, user.Age, user.LikeNums)},
 					})
 				}

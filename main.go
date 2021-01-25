@@ -241,7 +241,7 @@ func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) error {
 		return err
 	}
 	if result.Ret != 0 {
-		return errors.New(result.Msg)
+		return errors.New("Error ")
 	} else {
 		return nil
 	}
@@ -260,7 +260,7 @@ func (b *BotManager) RefreshKey() error {
 		return err
 	}
 	if result.Ret != 0 {
-		return errors.New(result.Msg)
+		return errors.New("Error ")
 	} else {
 		return nil
 	}
@@ -280,6 +280,36 @@ func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
 		return result, err
 	}
 	return result, nil
+}
+
+// QQ赞 次数
+func (b *BotManager) Zan(qq int64, num int) int {
+	var result Result
+	success := 0
+	for i := 0; i < num; i++ {
+		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x7e5_4&qq="+strconv.FormatInt(b.QQ, 10), map[string]int64{"UserID": qq})
+		if err == nil {
+			err = res.Json(&result)
+			if err != nil {
+				break
+			}
+			if result.Ret == 0 {
+				success += 1
+			}
+		}
+		time.Sleep(500 * time.Microsecond)
+	}
+	return success
+}
+func (b *BotManager) At(qqs []int64) string {
+	var qqs_str []string
+	for i := range qqs_str {
+		qqs_str = append(qqs_str, qqs_str[i])
+	}
+	return "[ATUSER(" + strings.Join(qqs_str, ",") + ")]"
+}
+func (b *BotManager) AtAll() string {
+	return "[ATALL()]"
 }
 
 func (b *BotManager) AddEvent(EventName string, f interface{}) error {

@@ -313,8 +313,7 @@ type GroupSystemNotifyPack struct {
 }
 
 type Result struct {
-	Msg string `json:"Msg"`
-	Ret int    `json:"Ret"`
+	Ret int `json:"Ret"`
 }
 type UserInfo struct {
 	Age       int    `json:"Age"`
