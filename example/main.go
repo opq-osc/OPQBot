@@ -167,6 +167,12 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
+	err = opqBot.AddEvent(OPQBot.EventNameOnOther, func(botQQ int64, e interface{}) {
+		log.Println(e)
+	})
+	if err != nil {
+		log.Println(err.Error())
+	}
 	//opqBot.Send(OPQBot.SendMsgPack{
 	//	SendType:   OPQBot.SendTypePicMsgByUrl,
 	//	SendToType: OPQBot.SendToTypeFriend,

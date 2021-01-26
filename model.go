@@ -27,6 +27,7 @@ const (
 	EventNameOnGroupSystemNotify   = "ON_EVENT_GROUP_SYSTEMNOTIFY"
 	EventNameOnConnected           = "connection"
 	EventNameOnDisconnected        = "disconnection"
+	EventNameOnOther               = "other"
 )
 
 type SendMsgPack struct {

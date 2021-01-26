@@ -205,6 +205,13 @@ func (b *BotManager) Start() error {
 				}
 				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
+		default:
+			b.locker.RLock()
+			defer b.locker.RUnlock()
+			f, ok := b.onEvent[EventNameOnOther]
+			if ok {
+				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args)})
+			}
 		}
 	})
 
@@ -302,11 +309,11 @@ func (b *BotManager) Zan(qq int64, num int) int {
 	return success
 }
 func (b *BotManager) At(qqs []int64) string {
-	var qqs_str []string
-	for i := range qqs_str {
-		qqs_str = append(qqs_str, qqs_str[i])
+	var qqsStr []string
+	for i := range qqs {
+		qqsStr = append(qqsStr, strconv.FormatInt(qqs[i], 10))
 	}
-	return "[ATUSER(" + strings.Join(qqs_str, ",") + ")]"
+	return "[ATUSER(" + strings.Join(qqsStr, ",") + ")]"
 }
 func (b *BotManager) AtAll() string {
 	return "[ATALL()]"
@@ -343,6 +350,8 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 		okStruck = "ok"
 	case EventNameOnConnected:
 		okStruck = "ok"
+	case EventNameOnOther:
+		okStruck = "interface {}"
 	default:
 		return errors.New("Unknown EventName ")
 	}
@@ -353,6 +362,7 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 		b.onEvent[EventName] = fVal
 		return nil
 	}
+	//log.Println( fVal.Type().In(0).String())
 	if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
 		return errors.New("FuncError, Your Function Should Have " + okStruck)
 	}
