@@ -384,168 +384,118 @@ OuterLoop:
 		sendMsgPack := <-b.SendChan
 		sendJsonPack := make(map[string]interface{})
 		sendJsonPack["ToUserUid"] = sendMsgPack.ToUserUid
-		switch sendMsgPack.SendType {
-		case SendTypeTextMsg:
+		switch content := sendMsgPack.Content.(type) {
+		case SendTypeTextMsgContent:
 			sendJsonPack["SendMsgType"] = "TextMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch content := sendMsgPack.Content.(type) {
-			case SendTypeTextMsgContent:
-				sendJsonPack["Content"] = content.Content
-			case SendTypeTextMsgContentPrivateChat:
-				sendJsonPack["Content"] = content.Content
-				sendJsonPack["GroupID"] = content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypePicMsgByUrl:
+			sendJsonPack["Content"] = content.Content
+		case SendTypeTextMsgContentPrivateChat:
+			sendJsonPack["SendMsgType"] = "TextMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypePicMsgByUrlContent:
 			sendJsonPack["SendMsgType"] = "PicMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypePicMsgByUrlContent:
-				sendJsonPack["PicUrl"] = Content.PicUrl
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["FlashPic"] = Content.Flash
-			case SendTypePicMsgByUrlContentPrivateChat:
-				sendJsonPack["PicUrl"] = Content.PicUrl
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["GroupID"] = Content.Group
-				sendJsonPack["FlashPic"] = Content.Flash
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypePicMsgByLocal:
+			sendJsonPack["PicUrl"] = content.PicUrl
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["FlashPic"] = content.Flash
+		case SendTypePicMsgByUrlContentPrivateChat:
 			sendJsonPack["SendMsgType"] = "PicMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypePicMsgByLocalContent:
-				sendJsonPack["PicPath"] = Content.Path
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["FlashPic"] = Content.Flash
-			case SendTypePicMsgByLocalContentPrivateChat:
-				sendJsonPack["PicPath"] = Content.Path
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["GroupID"] = Content.Group
-				sendJsonPack["FlashPic"] = Content.Flash
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypePicMsgByMd5:
+			sendJsonPack["PicUrl"] = content.PicUrl
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["FlashPic"] = content.Flash
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypePicMsgByLocalContent:
 			sendJsonPack["SendMsgType"] = "PicMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypePicMsgByMd5Content:
-				sendJsonPack["PicMd5s"] = Content.Md5
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["FlashPic"] = Content.Flash
-			case SendTypePicMsgByMd5ContentPrivateChat:
-				sendJsonPack["PicMd5s"] = Content.Md5s
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["GroupID"] = Content.Group
-				sendJsonPack["FlashPic"] = Content.Flash
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypeVoiceByUrl:
+			sendJsonPack["PicPath"] = content.Path
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["FlashPic"] = content.Flash
+		case SendTypePicMsgByLocalContentPrivateChat:
+			sendJsonPack["SendMsgType"] = "PicMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["PicPath"] = content.Path
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["FlashPic"] = content.Flash
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypePicMsgByMd5Content:
+			sendJsonPack["SendMsgType"] = "PicMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["PicMd5s"] = content.Md5
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["FlashPic"] = content.Flash
+		case SendTypeVoiceByUrlContent:
 			sendJsonPack["SendMsgType"] = "VoiceMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypeVoiceByUrlContent:
-				sendJsonPack["VoiceUrl"] = Content.VoiceUrl
-			case SendTypeVoiceByUrlContentPrivateChat:
-				sendJsonPack["VoiceUrl"] = Content.VoiceUrl
-				sendJsonPack["GroupID"] = Content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypeVoiceByLocal:
+			sendJsonPack["VoiceUrl"] = content.VoiceUrl
+		case SendTypeVoiceByUrlContentPrivateChat:
 			sendJsonPack["SendMsgType"] = "VoiceMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypeVoiceByLocalContent:
-				sendJsonPack["VoiceUrl"] = Content.Path
-			case SendTypeVoiceByLocalContentPrivateChat:
-				sendJsonPack["VoiceUrl"] = Content.Path
-				sendJsonPack["GroupID"] = Content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypeXml:
+			sendJsonPack["VoiceUrl"] = content.VoiceUrl
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypeVoiceByLocalContent:
+			sendJsonPack["SendMsgType"] = "VoiceMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["VoiceUrl"] = content.Path
+		case SendTypeVoiceByLocalContentPrivateChat:
+			sendJsonPack["SendMsgType"] = "VoiceMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["VoiceUrl"] = content.Path
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypeXmlContent:
 			sendJsonPack["SendMsgType"] = "XmlMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypeXmlContent:
-				sendJsonPack["Content"] = Content.Content
-			case SendTypeXmlContentPrivateChat:
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["GroupID"] = Content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypeJson:
+			sendJsonPack["Content"] = content.Content
+		case SendTypeXmlContentPrivateChat:
 			sendJsonPack["SendMsgType"] = "XmlMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypeJsonContent:
-				sendJsonPack["Content"] = Content.Content
-			case SendTypeJsonContentPrivateChat:
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["GroupID"] = Content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypeForword:
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypeJsonContent:
+			sendJsonPack["SendMsgType"] = "JsonMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["Content"] = content.Content
+		case SendTypeJsonContentPrivateChat:
+			sendJsonPack["SendMsgType"] = "JsonMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypeForwordContent:
 			sendJsonPack["SendMsgType"] = "ForwordMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypeForwordContent:
-				sendJsonPack["ForwordBuf"] = Content.ForwordBuf
-				sendJsonPack["ForwordField"] = Content.ForwordField
-			case SendTypeForwordContentPrivateChat:
-				sendJsonPack["ForwordBuf"] = Content.ForwordBuf
-				sendJsonPack["ForwordField"] = Content.ForwordField
-				sendJsonPack["GroupID"] = Content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypeReplay:
+			sendJsonPack["ForwordBuf"] = content.ForwordBuf
+			sendJsonPack["ForwordField"] = content.ForwordField
+		case SendTypeForwordContentPrivateChat:
+			sendJsonPack["SendMsgType"] = "ForwordMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["ForwordBuf"] = content.ForwordBuf
+			sendJsonPack["ForwordField"] = content.ForwordField
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypeRelayContent:
+			sendJsonPack["ReplayInfo"] = content.ReplayInfo
+		case SendTypeRelayContentPrivateChat:
 			sendJsonPack["SendMsgType"] = "ReplayMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypeRelayContent:
-				sendJsonPack["ReplayInfo"] = Content.ReplayInfo
-			case SendTypeRelayContentPrivateChat:
-				sendJsonPack["ReplayInfo"] = Content.ReplayInfo
-				sendJsonPack["GroupID"] = Content.Group
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
-		case SendTypePicMsgByBase64:
+			sendJsonPack["ReplayInfo"] = content.ReplayInfo
+			sendJsonPack["GroupID"] = content.Group
+		case SendTypePicMsgByBase64Content:
 			sendJsonPack["SendMsgType"] = "PicMsg"
 			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			switch Content := sendMsgPack.Content.(type) {
-			case SendTypePicMsgByBase64Content:
-				sendJsonPack["PicBase64Buf"] = Content.Base64
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["FlashPic"] = Content.Flash
-			case SendTypePicMsgByBase64ContentPrivateChat:
-				sendJsonPack["PicBase64Buf"] = Content.Base64
-				sendJsonPack["Content"] = Content.Content
-				sendJsonPack["GroupID"] = Content.Group
-				sendJsonPack["FlashPic"] = Content.Flash
-			default:
-				log.Println("类型不匹配")
-				continue OuterLoop
-			}
+			sendJsonPack["PicBase64Buf"] = content.Base64
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["FlashPic"] = content.Flash
+		case SendTypePicMsgByBase64ContentPrivateChat:
+			sendJsonPack["SendMsgType"] = "PicMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			sendJsonPack["PicBase64Buf"] = content.Base64
+			sendJsonPack["Content"] = content.Content
+			sendJsonPack["GroupID"] = content.Group
+			sendJsonPack["FlashPic"] = content.Flash
+		default:
+			log.Println("未知发送的类型")
+			continue OuterLoop
 		}
 		tmp, _ := json.Marshal(sendJsonPack)
 		log.Println(string(tmp))

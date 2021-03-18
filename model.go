@@ -1,17 +1,6 @@
 package OPQBot
 
 const (
-	SendTypeTextMsg                = 1
-	SendTypePicMsgByUrl            = 2
-	SendTypePicMsgByLocal          = 3
-	SendTypePicMsgByMd5            = 4
-	SendTypeVoiceByUrl             = 5
-	SendTypeVoiceByLocal           = 6
-	SendTypeXml                    = 7
-	SendTypeJson                   = 8
-	SendTypeForword                = 9
-	SendTypeReplay                 = 10
-	SendTypePicMsgByBase64         = 11
 	SendToTypeFriend               = 1
 	SendToTypeGroup                = 2
 	SendToTypePrivateChat          = 3
@@ -32,7 +21,6 @@ const (
 )
 
 type SendMsgPack struct {
-	SendType   int
 	SendToType int
 	ToUserUid  int64
 	Content    interface{}

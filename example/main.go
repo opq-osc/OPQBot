@@ -26,7 +26,6 @@ func main() {
 			if packet.Content == "Base64图片测试" {
 				pic, _ := ioutil.ReadFile("./test.jpg")
 				opqBot.Send(OPQBot.SendMsgPack{
-					SendType:   OPQBot.SendTypePicMsgByBase64,
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,
 					Content:    OPQBot.SendTypePicMsgByBase64Content{Content: "图片", Base64: base64.StdEncoding.EncodeToString(pic)},
@@ -38,7 +37,6 @@ func main() {
 				if ok {
 					if i == time.Now().Day() {
 						opqBot.Send(OPQBot.SendMsgPack{
-							SendType:   OPQBot.SendTypeTextMsg,
 							SendToType: OPQBot.SendToTypeGroup,
 							ToUserUid:  packet.FromGroupID,
 							Content:    OPQBot.SendTypeTextMsgContent{Content: "今日已赞!"},
@@ -47,14 +45,12 @@ func main() {
 					}
 				}
 				opqBot.Send(OPQBot.SendMsgPack{
-					SendType:   OPQBot.SendTypeTextMsg,
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,
 					Content:    OPQBot.SendTypeTextMsgContent{Content: "正在赞请稍后！"},
 				})
 				success := opqBot.Zan(packet.FromUserID, 50)
 				opqBot.Send(OPQBot.SendMsgPack{
-					SendType:   OPQBot.SendTypeTextMsg,
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,
 					Content:    OPQBot.SendTypeTextMsgContent{Content: "成功赞了" + strconv.Itoa(success) + "次"},
@@ -70,7 +66,6 @@ func main() {
 				var pixivPic Pic
 				_ = res.Json(&pixivPic)
 				opqBot.Send(OPQBot.SendMsgPack{
-					SendType:   OPQBot.SendTypePicMsgByUrl,
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  int64(packet.FromGroupID),
 					Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "随机", PicUrl: pixivPic.Imgurl},
@@ -95,7 +90,6 @@ func main() {
 			if ok {
 				if i == time.Now().Day() {
 					opqBot.Send(OPQBot.SendMsgPack{
-						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
 						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: "今日已赞!"},
@@ -104,14 +98,12 @@ func main() {
 				}
 			}
 			opqBot.Send(OPQBot.SendMsgPack{
-				SendType:   OPQBot.SendTypeTextMsg,
 				SendToType: OPQBot.SendToTypeFriend,
 				ToUserUid:  packet.FromUin,
 				Content:    OPQBot.SendTypeTextMsgContent{Content: "正在赞请稍后！"},
 			})
 			success := opqBot.Zan(packet.FromUin, 50)
 			opqBot.Send(OPQBot.SendMsgPack{
-				SendType:   OPQBot.SendTypeTextMsg,
 				SendToType: OPQBot.SendToTypeFriend,
 				ToUserUid:  packet.FromUin,
 				Content:    OPQBot.SendTypeTextMsgContent{Content: "成功赞了" + strconv.Itoa(success) + "次"},
@@ -125,7 +117,6 @@ func main() {
 				qq, err := strconv.ParseInt(c[1], 10, 64)
 				if err != nil {
 					opqBot.Send(OPQBot.SendMsgPack{
-						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
 						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
@@ -135,7 +126,6 @@ func main() {
 				log.Println(user)
 				if err != nil {
 					opqBot.Send(OPQBot.SendMsgPack{
-						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
 						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
@@ -148,7 +138,6 @@ func main() {
 						sex = "男"
 					}
 					opqBot.Send(OPQBot.SendMsgPack{
-						SendType:   OPQBot.SendTypeTextMsg,
 						SendToType: OPQBot.SendToTypeFriend,
 						ToUserUid:  packet.FromUin,
 						Content:    OPQBot.SendTypeTextMsgContent{Content: fmt.Sprintf("用户:%s[%d]%s\n来自:%s\n年龄:%d\n被赞了:%d次\n", user.NickName, user.QQUin, sex, user.Province+user.City, user.Age, user.LikeNums)},
