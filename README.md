@@ -48,12 +48,11 @@ func main()  {
 		log.Println(err.Error())
 	}
 	opqBot.Send(OPQBot.SendMsgPack{
-		SendType:   OPQBot.SendTypePicMsgByUrl,
 		SendToType: OPQBot.SendToTypeFriend,
 		ToUserUid:  2435932516,
 		Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "你好", PicUrl: "https://img-home.csdnimg.cn/images/20201124032511.png"},
 	})
-	time.Sleep(1*time.Hour)
+	time.Sleep(1*time.Hour) // 可以用WaitGroup替代
 }
 ```
 
