@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/asmcos/requests"
 	"github.com/mcoo/OPQBot"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -21,6 +23,16 @@ func main() {
 	defer opqBot.Stop()
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
+			if packet.Content == "Base64图片测试" {
+				pic, _ := ioutil.ReadFile("./test.jpg")
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendType:   OPQBot.SendTypePicMsgByBase64,
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypePicMsgByBase64Content{Content: "图片", Base64: base64.StdEncoding.EncodeToString(pic)},
+				})
+				return
+			}
 			if packet.Content == "赞我" {
 				i, ok := ZanNote[packet.FromUserID]
 				if ok {

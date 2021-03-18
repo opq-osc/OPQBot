@@ -529,6 +529,23 @@ OuterLoop:
 				log.Println("类型不匹配")
 				continue OuterLoop
 			}
+		case SendTypePicMsgByBase64:
+			sendJsonPack["SendMsgType"] = "PicMsg"
+			sendJsonPack["SendToType"] = sendMsgPack.SendToType
+			switch Content := sendMsgPack.Content.(type) {
+			case SendTypePicMsgByBase64Content:
+				sendJsonPack["PicBase64Buf"] = Content.Base64
+				sendJsonPack["Content"] = Content.Content
+				sendJsonPack["FlashPic"] = Content.Flash
+			case SendTypePicMsgByBase64ContentPrivateChat:
+				sendJsonPack["PicBase64Buf"] = Content.Base64
+				sendJsonPack["Content"] = Content.Content
+				sendJsonPack["GroupID"] = Content.Group
+				sendJsonPack["FlashPic"] = Content.Flash
+			default:
+				log.Println("类型不匹配")
+				continue OuterLoop
+			}
 		}
 		tmp, _ := json.Marshal(sendJsonPack)
 		log.Println(string(tmp))

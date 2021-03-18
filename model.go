@@ -11,6 +11,7 @@ const (
 	SendTypeJson                   = 8
 	SendTypeForword                = 9
 	SendTypeReplay                 = 10
+	SendTypePicMsgByBase64         = 11
 	SendToTypeFriend               = 1
 	SendToTypeGroup                = 2
 	SendToTypePrivateChat          = 3
@@ -68,6 +69,18 @@ type SendTypePicMsgByLocalContent struct {
 type SendTypePicMsgByLocalContentPrivateChat struct {
 	Content string
 	Path    string
+	Group   int64
+	Flash   bool
+}
+
+type SendTypePicMsgByBase64Content struct {
+	Content string
+	Base64  string
+	Flash   bool
+}
+type SendTypePicMsgByBase64ContentPrivateChat struct {
+	Content string
+	Base64  string
 	Group   int64
 	Flash   bool
 }
