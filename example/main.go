@@ -16,6 +16,8 @@ var ZanNote = map[int64]int{}
 
 func main() {
 	opqBot := OPQBot.NewBotManager(2629326992, "http://192.168.2.2:8899")
+	// 设置发送队列每次发送的间隔时间 默认1000ms
+	opqBot.SetSendDelayed(1000)
 	err := opqBot.Start()
 	if err != nil {
 		log.Println(err.Error())
@@ -92,7 +94,7 @@ func main() {
 					opqBot.Send(OPQBot.SendMsgPack{
 						SendToType: OPQBot.SendToTypeFriend,
 						ToUserUid:  packet.FromUin,
-						Content:    OPQBot.SendTypeTextMsgContent{Content: "今日已赞!"},
+						Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUin}) + "今日已赞!"},
 					})
 					return
 				}

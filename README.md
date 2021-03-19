@@ -1,6 +1,5 @@
 # OPQBot
-OPQBot
-
+![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/mcoo/OPQBot/master?filename=go.mod&style=for-the-badge) ![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/mcoo/OPQBot?include_prereleases&style=for-the-badge) ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/mcoo/OPQBot?include_prereleases&style=for-the-badge) ![GitHub](https://img.shields.io/github/license/mcoo/OPQBot?style=for-the-badge)
 ### 功能
 |功能|是否实现|
 |-|-|
@@ -57,3 +56,9 @@ func main()  {
 ```
 
 更多请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
+
+### 没人看的更新历史
+```
+20210318    简化发送代码
+20210319    将宏移出BotManager,添加对发送队列每次发送时间的控制
+```

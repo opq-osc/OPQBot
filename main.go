@@ -21,11 +21,17 @@ type BotManager struct {
 	Running  bool
 	OPQUrl   string
 	onEvent  map[string]reflect.Value
+	delayed  int
 	locker   sync.RWMutex
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
-	return BotManager{QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string]reflect.Value), locker: sync.RWMutex{}}
+	return BotManager{QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string]reflect.Value), locker: sync.RWMutex{}, delayed: 1000}
+}
+
+// 设置发送消息的时延 单位毫秒 默认1000
+func (b *BotManager) SetSendDelayed(Millisecond int) {
+	b.delayed = Millisecond
 }
 
 // 开始连接
@@ -214,7 +220,6 @@ func (b *BotManager) Start() error {
 			}
 		}
 	})
-
 	return nil
 }
 
@@ -308,14 +313,16 @@ func (b *BotManager) Zan(qq int64, num int) int {
 	}
 	return success
 }
-func (b *BotManager) At(qqs []int64) string {
+
+// At宏
+func MacroAt(qqs []int64) string {
 	var qqsStr []string
 	for i := range qqs {
 		qqsStr = append(qqsStr, strconv.FormatInt(qqs[i], 10))
 	}
 	return "[ATUSER(" + strings.Join(qqsStr, ",") + ")]"
 }
-func (b *BotManager) AtAll() string {
+func MacroAtAll() string {
 	return "[ATALL()]"
 }
 
@@ -505,6 +512,6 @@ OuterLoop:
 			continue
 		}
 		log.Println(res.Text())
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Duration(b.delayed) * time.Millisecond)
 	}
 }
