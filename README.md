@@ -1,6 +1,6 @@
-# OPQBot
-![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/mcoo/OPQBot/master?filename=go.mod&style=for-the-badge) ![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/mcoo/OPQBot?include_prereleases&style=for-the-badge) ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/mcoo/OPQBot?include_prereleases&style=for-the-badge) ![GitHub](https://img.shields.io/github/license/mcoo/OPQBot?style=for-the-badge)
-### 功能
+# OPQBot 🎉
+![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/mcoo/OPQBot/master?filename=go.mod&style=for-the-badge&logo=go) ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/mcoo/OPQBot?include_prereleases&style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA1klEQVQ4T6XTvQ3CMBCG4fdKRgCxBQvQMgAZggUQFdDBCAxAAz1INGQAKCnYgR0O2VjBSc5JBCn98+Tusy2qegXG1L8HcAF2IvI05v2QqKqmJsP4C5iJyNFaFwM5sAeGwNJYnFlIDGxEZOE2quoJmHRBYmAtIqsA3IBRorVSJdUMzkAvEWrsFYgDmv7WlK9HHODKtkJrORw/nTmgD7gqBl12VNbcJYQ2BQ4/ALkH/kCyAvgB+YRYLVtVu7TzPUar7xakfJFSwSWQ2nuotRCDAZmHsa31mN4A6l46o4qtxAAAAABJRU5ErkJggg==) ![GitHub](https://img.shields.io/github/license/mcoo/OPQBot?style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABMklEQVQ4T5WTsS5EQRSGv18EhcgmOkqJVlQ6sZWGgkQhUW9hS4XS7jOICIUKkUi20CjxBrKdBxCFgifwy6y7nL3mbjjNnZz7zzfn/GdGhLC9B6yF1IOkVtSU1+onbO8CR8B9EK0AC5K6VZAISCcdANeFeApYBeqSInSAFQEN4CRz0iPwnsl3JB1+A5LA9l36Sqrbfis2JUA5RoBlYP8vgFRZP6bD+hhoxxa2gNMgmARGh0zgQtJOzsTYb+0/JlaNcVFSzodecWUPzoHZUPYr0JCUm8IPwHbatARslgDPQOr1duhFsn0JbANPwEsQzwDzQEtSOweR7TNgY9h9Bz6AK0nNX2/BtituWllbkzTgWc/EApDK60rq2J4r3kD6PwaMAxNFG5WAL0elBLwB1rP9Zir4BJmUbAFx6PbeAAAAAElFTkSuQmCC)
+### 功能 😄
 |功能|是否实现|
 |-|-|
 |群消息处理事件|是|
@@ -10,9 +10,9 @@
 |At|是|
 |表情|是|
 |撤回|是|
-### Install
+### 安装 💡
 `go get github.com/mcoo/OPQBot`
-### Example
+### 例子 👆
 ```golang
 package main
 
@@ -57,7 +57,7 @@ func main()  {
 
 更多请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
 
-### 没人看的更新历史
+### 没人看的更新历史 ✏️
 ```
 20210318    简化发送代码
 20210319    将宏移出BotManager,添加对发送队列每次发送时间的控制
