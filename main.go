@@ -16,13 +16,19 @@ import (
 )
 
 type BotManager struct {
-	QQ       int64
-	SendChan chan SendMsgPack
-	Running  bool
-	OPQUrl   string
-	onEvent  map[string]reflect.Value
-	delayed  int
-	locker   sync.RWMutex
+	QQ         int64
+	SendChan   chan SendMsgPack
+	Running    bool
+	OPQUrl     string
+	onEvent    map[string]reflect.Value
+	middleware []middleware
+	delayed    int
+	locker     sync.RWMutex
+}
+
+type middleware struct {
+	priority int
+	fun      reflect.Value
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
@@ -381,6 +387,28 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 
 }
 
+// 注册 发送函数的中间件 2为最先执行 0为最后执行
+func (b *BotManager) RegMiddleware(priority int, f interface{}) error {
+	fVal := reflect.ValueOf(f)
+	if fVal.Kind() != reflect.Func {
+		return errors.New("NotFuncError")
+	}
+	if priority < 0 || priority > 2 {
+		return errors.New("priority should >= 0 and <= 2 ")
+	}
+	if fVal.Type().NumIn() != 1 {
+		return errors.New("Error ")
+	}
+	middle := middleware{
+		priority: priority,
+		fun:      fVal,
+	}
+	b.locker.Lock()
+	defer b.locker.Unlock()
+	b.middleware = append(b.middleware, middle)
+	return nil
+}
+
 func (b *BotManager) receiveSendPack() {
 	log.Println("QQ发送信息通道开启")
 OuterLoop:
@@ -504,6 +532,13 @@ OuterLoop:
 			log.Println("未知发送的类型")
 			continue OuterLoop
 		}
+		for i := 2; i >= 0; i-- {
+			for _, v := range b.middleware {
+				if v.priority == i {
+					v.fun.Call([]reflect.Value{reflect.ValueOf(sendJsonPack)})
+				}
+			}
+		}
 		tmp, _ := json.Marshal(sendJsonPack)
 		log.Println(string(tmp))
 		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
@@ -511,7 +546,18 @@ OuterLoop:
 			log.Println(err.Error())
 			continue
 		}
-		log.Println(res.Text())
+		var result Result
+		err = res.Json(&result)
+		if err != nil {
+			log.Println("发送失败！ ", err.Error())
+			continue
+		}
+		switch result.Ret {
+		case 0:
+		default:
+			log.Println("发送失败！ ", result.Ret, result.Msg)
+		}
+		//log.Println(res.Text())
 		time.Sleep(time.Duration(b.delayed) * time.Millisecond)
 	}
 }

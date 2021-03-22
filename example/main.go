@@ -23,6 +23,9 @@ func main() {
 		log.Println(err.Error())
 	}
 	defer opqBot.Stop()
+	log.Println(opqBot.RegMiddleware(1, func(m map[string]interface{}) {
+		m["Content"] = "XXX"
+	}))
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			if packet.Content == "Base64图片测试" {

@@ -313,9 +313,9 @@ type GroupSystemNotifyPack struct {
 		RedBaginfo interface{} `json:"RedBaginfo"`
 	} `json:"EventMsg"`
 }
-
 type Result struct {
-	Ret int `json:"Ret"`
+	Msg string `json:"Msg"`
+	Ret int    `json:"Ret"`
 }
 type UserInfo struct {
 	Age       int    `json:"Age"`
