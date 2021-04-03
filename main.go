@@ -301,6 +301,58 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 	return nil
 }
 
+// 设置管理员 flag 1为设置管理员 2为取消管理员
+func (b *BotManager) SetAdmin(flag int, groupID, userId int64) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x55c_1&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId, "Flag": flag})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// 设置禁言 flag 0为设置全体禁言 1为设置某人禁言 ShutTime 0为取消禁言 >0为禁言分钟数 全体禁言>0为开启禁言
+func (b *BotManager) SetForbidden(flag, ShutTime int, groupID, userId int64) error {
+	var result Result
+	if flag == 0 {
+		Switch := 0
+		if ShutTime > 0 {
+			Switch = 1
+		}
+		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x89a_0&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "Switch": Switch})
+		if err != nil {
+			return err
+		}
+		err = res.Json(&result)
+		if err != nil {
+			return err
+		}
+		if result.Ret != 0 {
+			return errors.New(result.Msg)
+		}
+	} else {
+		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x570_8&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "ShutUpUserID": userId, "ShutTime": ShutTime})
+		if err != nil {
+			return err
+		}
+		err = res.Json(&result)
+		if err != nil {
+			return err
+		}
+		if result.Ret != 0 {
+			return errors.New(result.Msg)
+		}
+	}
+	return nil
+}
+
 // 下载文件 groupId 为0 是下载好友分享文件
 func (b *BotManager) GetFile(fileId string, groupID int64) (FriendFileResult, GroupFileResult, error) {
 	var friendFileResult FriendFileResult
