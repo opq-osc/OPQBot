@@ -28,7 +28,7 @@ type BotManager struct {
 
 type middleware struct {
 	priority int
-	fun      reflect.Value
+	fun      func(m map[string]interface{}) map[string]interface{}
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
@@ -284,6 +284,49 @@ func (b *BotManager) RefreshKey() error {
 	}
 }
 
+// 发公告 Pinned 1为置顶,0为普通公告 announceType 发布类型(10为使用弹窗公告,20为发送给新成员,其他暂未知)
+func (b *BotManager) Announce(title, text string, pinned, announceType int, groupID int64) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/Group/Announce?qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "Title": title, "Text": text, "Pinned": pinned, "Type": announceType})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// 下载文件 groupId 为0 是下载好友分享文件
+func (b *BotManager) GetFile(fileId string, groupID int64) (FriendFileResult, GroupFileResult, error) {
+	var friendFileResult FriendFileResult
+	var groupFileResult GroupFileResult
+	if groupID == 0 {
+		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_DOWNLOAD-1200&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"FileID": fileId})
+		if err != nil {
+			return friendFileResult, groupFileResult, err
+		}
+		err = res.Json(&friendFileResult)
+		if err != nil {
+			return friendFileResult, groupFileResult, err
+		}
+	} else {
+		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x6d6_2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"FileID": fileId, "GroupID": groupID})
+		if err != nil {
+			return friendFileResult, groupFileResult, err
+		}
+		err = res.Json(&groupFileResult)
+		if err != nil {
+			return friendFileResult, groupFileResult, err
+		}
+	}
+	return friendFileResult, groupFileResult, nil
+}
+
 // 获取用户信息
 func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
 	var result UserInfo
@@ -388,7 +431,7 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 }
 
 // 注册 发送函数的中间件 2为最先执行 0为最后执行
-func (b *BotManager) RegMiddleware(priority int, f interface{}) error {
+func (b *BotManager) RegMiddleware(priority int, f func(m map[string]interface{}) map[string]interface{}) error {
 	fVal := reflect.ValueOf(f)
 	if fVal.Kind() != reflect.Func {
 		return errors.New("NotFuncError")
@@ -401,7 +444,7 @@ func (b *BotManager) RegMiddleware(priority int, f interface{}) error {
 	}
 	middle := middleware{
 		priority: priority,
-		fun:      fVal,
+		fun:      f,
 	}
 	b.locker.Lock()
 	defer b.locker.Unlock()
@@ -534,11 +577,25 @@ OuterLoop:
 		}
 		for i := 2; i >= 0; i-- {
 			for _, v := range b.middleware {
+				if len(sendJsonPack) == 0 {
+					break
+				}
 				if v.priority == i {
-					v.fun.Call([]reflect.Value{reflect.ValueOf(sendJsonPack)})
+					sendJsonPack = v.fun(sendJsonPack)
+					//v.fun.Call([]reflect.Value{reflect.ValueOf(sendJsonPack)})
+				}
+				r, ok := sendJsonPack["reason"].(string)
+				if len(sendJsonPack) == 1 && ok {
+					if r != "" {
+						log.Println("消息被拦截！拦截原因 " + r)
+					} else {
+						log.Println("消息被拦截！无拦截原因")
+					}
+					continue OuterLoop
 				}
 			}
 		}
+
 		tmp, _ := json.Marshal(sendJsonPack)
 		log.Println(string(tmp))
 		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
@@ -552,12 +609,15 @@ OuterLoop:
 			log.Println("发送失败！ ", err.Error())
 			continue
 		}
-		switch result.Ret {
-		case 0:
-		default:
-			log.Println("发送失败！ ", result.Ret, result.Msg)
-		}
+		//switch result.Ret {
+		//case 0:
+		//default:
+		//	log.Println("发送失败！ ", result.Ret, result.Msg)
+		//}
 		//log.Println(res.Text())
+		if sendMsgPack.CallbackFunc != nil {
+			go sendMsgPack.CallbackFunc(result.Ret, result.Msg)
+		}
 		time.Sleep(time.Duration(b.delayed) * time.Millisecond)
 	}
 }

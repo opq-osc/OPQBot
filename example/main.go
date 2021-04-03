@@ -15,7 +15,7 @@ import (
 var ZanNote = map[int64]int{}
 
 func main() {
-	opqBot := OPQBot.NewBotManager(2629326992, "http://192.168.2.2:8899")
+	opqBot := OPQBot.NewBotManager(2629326992, "http://raspberrypi.local:8888")
 	// 设置发送队列每次发送的间隔时间 默认1000ms
 	opqBot.SetSendDelayed(1000)
 	err := opqBot.Start()
@@ -23,11 +23,17 @@ func main() {
 		log.Println(err.Error())
 	}
 	defer opqBot.Stop()
-	log.Println(opqBot.RegMiddleware(1, func(m map[string]interface{}) {
-		m["Content"] = "XXX"
+	log.Println(opqBot.RegMiddleware(1, func(m map[string]interface{}) map[string]interface{} {
+		//m["Content"] = "测试"
+		m = map[string]interface{}{"reason": "消息违规"}
+		return m
 	}))
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
+			if packet.Content == "公告测试" {
+				fmt.Println(opqBot.Announce("公告测试", "内容", 0, 10, packet.FromGroupID))
+				return
+			}
 			if packet.Content == "Base64图片测试" {
 				pic, _ := ioutil.ReadFile("./test.jpg")
 				opqBot.Send(OPQBot.SendMsgPack{
@@ -74,6 +80,13 @@ func main() {
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  int64(packet.FromGroupID),
 					Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "随机", PicUrl: pixivPic.Imgurl},
+					CallbackFunc: func(Code int, Info string) {
+						if Code == 0 {
+							log.Println("发送成功")
+						} else {
+							log.Println("发送失败 错误代码", Code, Info)
+						}
+					},
 				})
 				return
 			}
@@ -93,6 +106,10 @@ func main() {
 		if packet.Content == "赞我" {
 			i, ok := ZanNote[packet.FromUin]
 			if ok {
+				// Todo 添加回调函数??
+				// CallbackFunc: func(Code int,Info string) {
+				//
+				//	},
 				if i == time.Now().Day() {
 					opqBot.Send(OPQBot.SendMsgPack{
 						SendToType: OPQBot.SendToTypeFriend,

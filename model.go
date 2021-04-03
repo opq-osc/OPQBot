@@ -21,9 +21,10 @@ const (
 )
 
 type SendMsgPack struct {
-	SendToType int
-	ToUserUid  int64
-	Content    interface{}
+	SendToType   int
+	ToUserUid    int64
+	Content      interface{}
+	CallbackFunc func(Code int, Info string)
 }
 
 type SendTypeTextMsgContent struct {
@@ -327,4 +328,14 @@ type UserInfo struct {
 	QQLevel   int    `json:"QQLevel"`
 	QQUin     int64  `json:"QQUin"`
 	Sex       int    `json:"Sex"`
+}
+type FriendFileResult struct {
+	FileName string `json:"FileName"`
+	FileSize int    `json:"FileSize"`
+	FromUin  int    `json:"FromUin"`
+	URL      string `json:"Url"`
+}
+type GroupFileResult struct {
+	Ret int    `json:"Ret"`
+	URL string `json:"Url"`
 }
