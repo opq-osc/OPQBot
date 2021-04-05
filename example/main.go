@@ -23,11 +23,11 @@ func main() {
 		log.Println(err.Error())
 	}
 	defer opqBot.Stop()
-	log.Println(opqBot.RegMiddleware(1, func(m map[string]interface{}) map[string]interface{} {
-		//m["Content"] = "测试"
-		m = map[string]interface{}{"reason": "消息违规"}
-		return m
-	}))
+	//log.Println(opqBot.RegMiddleware(1, func(m map[string]interface{}) map[string]interface{} {
+	//	//m["Content"] = "测试"
+	//	m = map[string]interface{}{"reason": "消息违规"}
+	//	return m
+	//}))
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			if packet.Content == "公告测试" {
@@ -43,6 +43,18 @@ func main() {
 				})
 				return
 			}
+			// 只有消息内容中含有宏OPQBot.MacroId() record 中才有消息的值，才能去用于撤回消息！
+			if packet.Content == "撤回测试" {
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "5s撤回测试！\n" + OPQBot.MacroId()},
+					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
+						time.Sleep(5 * time.Second)
+						_ = opqBot.ReCallMsg(record.FromGroupID, record.MsgRandom, record.MsgSeq)
+					},
+				})
+			}
 			if packet.Content == "赞我" {
 				i, ok := ZanNote[packet.FromUserID]
 				if ok {
@@ -51,6 +63,14 @@ func main() {
 							SendToType: OPQBot.SendToTypeGroup,
 							ToUserUid:  packet.FromGroupID,
 							Content:    OPQBot.SendTypeTextMsgContent{Content: "今日已赞!"},
+							CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
+								log.Println(record)
+								if Code == 0 {
+									log.Println("发送成功")
+								} else {
+									log.Println("发送失败 错误代码", Code, Info)
+								}
+							},
 						})
 						return
 					}
@@ -59,6 +79,14 @@ func main() {
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,
 					Content:    OPQBot.SendTypeTextMsgContent{Content: "正在赞请稍后！"},
+					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
+						log.Println(record)
+						if Code == 0 {
+							log.Println("发送成功")
+						} else {
+							log.Println("发送失败 错误代码", Code, Info)
+						}
+					},
 				})
 				success := opqBot.Zan(packet.FromUserID, 50)
 				opqBot.Send(OPQBot.SendMsgPack{
@@ -80,7 +108,7 @@ func main() {
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  int64(packet.FromGroupID),
 					Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "随机", PicUrl: pixivPic.Imgurl},
-					CallbackFunc: func(Code int, Info string) {
+					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
 						if Code == 0 {
 							log.Println("发送成功")
 						} else {

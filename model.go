@@ -24,7 +24,7 @@ type SendMsgPack struct {
 	SendToType   int
 	ToUserUid    int64
 	Content      interface{}
-	CallbackFunc func(Code int, Info string)
+	CallbackFunc func(Code int, Info string, record MyRecord)
 }
 
 type SendTypeTextMsgContent struct {
@@ -151,13 +151,21 @@ type currentPacket struct {
 	Data      interface{} `json:"Data"`
 	WebConnID string      `json:"WebConnId"`
 }
+type MyRecord struct {
+	FromGroupID int64  `json:"FromGroupId"`
+	MsgRandom   int64  `json:"MsgRandom"`
+	MsgSeq      int    `json:"MsgSeq"`
+	MsgTime     int    `json:"MsgTime"`
+	MsgType     string `json:"MsgType"`
+	Content     string `json:"Content"`
+}
 type GroupMsgPack struct {
 	Content       string      `json:"Content"`
 	FromGroupID   int64       `json:"FromGroupId"`
 	FromGroupName string      `json:"FromGroupName"`
 	FromNickName  string      `json:"FromNickName"`
 	FromUserID    int64       `json:"FromUserId"`
-	MsgRandom     int         `json:"MsgRandom"`
+	MsgRandom     int64       `json:"MsgRandom"`
 	MsgSeq        int         `json:"MsgSeq"`
 	MsgTime       int         `json:"MsgTime"`
 	MsgType       string      `json:"MsgType"`
