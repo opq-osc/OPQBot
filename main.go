@@ -346,6 +346,23 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 	return nil
 }
 
+// 戳戳
+func (b *BotManager) Chuo(groupID, userId int64) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0xed3_1&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
 // 设置管理员 flag 1为设置管理员 2为取消管理员
 func (b *BotManager) SetAdmin(flag int, groupID, userId int64) error {
 	var result Result

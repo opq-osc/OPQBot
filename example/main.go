@@ -34,6 +34,10 @@ func main() {
 				fmt.Println(opqBot.Announce("公告测试", "内容", 0, 10, packet.FromGroupID))
 				return
 			}
+			if packet.Content == "刷新" {
+				_ = opqBot.RefreshKey()
+				return
+			}
 			if packet.Content == "Base64图片测试" {
 				pic, _ := ioutil.ReadFile("./test.jpg")
 				opqBot.Send(OPQBot.SendMsgPack{
@@ -123,6 +127,14 @@ func main() {
 				if err != nil {
 					log.Println(err.Error())
 				}
+			}
+			if packet.Content == "戳我" {
+				log.Println("chuo")
+				err := opqBot.Chuo(packet.FromGroupID, packet.FromUserID)
+				if err != nil {
+					log.Println(err.Error())
+				}
+				log.Println(err)
 			}
 		}
 		log.Println(botQQ, packet)
@@ -230,7 +242,7 @@ func main() {
 	//	ToUserUid:  2435932516,
 	//	Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "你好", PicUrl: "https://img-home.csdnimg.cn/images/20201124032511.png"},
 	//})
-	time.Sleep(1 * time.Hour)
+	time.Sleep(24 * time.Hour)
 }
 
 type Pic struct {
