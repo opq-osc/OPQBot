@@ -2,7 +2,6 @@ package OPQBot
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 	"github.com/asmcos/requests"
 	"github.com/goinggo/mapstructure"
@@ -346,10 +345,10 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 	return nil
 }
 
-// 戳戳
-func (b *BotManager) Chuo(groupID, userId int64) error {
+// 戳戳 sendType  0戳好友 1戳群友 sendType=0 时可以不填此字段 sendType=1 时不能为空
+func (b *BotManager) Chuo(sendType int, groupID, userId int64) error {
 	var result Result
-	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0xed3_1&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId})
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0xed3_1&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId, "type": sendType})
 	if err != nil {
 		return err
 	}
@@ -758,8 +757,8 @@ OuterLoop:
 			}
 		}
 
-		tmp, _ := json.Marshal(sendJsonPack)
-		log.Println(string(tmp))
+		//tmp, _ := json.Marshal(sendJsonPack)
+		//log.Println(string(tmp))
 		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
 		if err != nil {
 			log.Println(err.Error())

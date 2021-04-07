@@ -130,7 +130,7 @@ func main() {
 			}
 			if packet.Content == "戳我" {
 				log.Println("chuo")
-				err := opqBot.Chuo(packet.FromGroupID, packet.FromUserID)
+				err := opqBot.Chuo(1, packet.FromGroupID, packet.FromUserID)
 				if err != nil {
 					log.Println(err.Error())
 				}
