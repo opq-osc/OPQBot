@@ -13,8 +13,10 @@
 |下载文件|是|
 |禁言|是|
 |群公告|是|
+
 ### 安装 💡
 `go get github.com/mcoo/OPQBot`
+[使用教程](https://mcenjoy.cn/330/)
 ### 例子 👆
 ```golang
 package main
