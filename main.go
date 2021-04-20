@@ -1,14 +1,19 @@
 package OPQBot
 
 import (
+	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"github.com/asmcos/requests"
 	"github.com/goinggo/mapstructure"
 	"github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
+	"io/ioutil"
 	"log"
 	"math/big"
+	"os"
+	"os/exec"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -35,16 +40,45 @@ type middleware struct {
 	fun      func(m map[string]interface{}) map[string]interface{}
 }
 
+// VoiceMp3ToSilk Mp3转Silk mp3->silk Output: base64 String
+func VoiceMp3ToSilk(mp3Path string) (string, error) {
+	n, _ := rand.Int(rand.Reader, big.NewInt(100000))
+	name := n.String()
+	pcmFile := name + ".tmp"
+	silkFile := name + ".silk"
+	cmd := exec.Command("./ffmpeg", "-i", mp3Path, "-ac", "1", "-ar", "24000", "-f", "s16le", pcmFile)
+	var stderr bytes.Buffer
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(pcmFile)
+	cmd = exec.Command("./encoder", pcmFile, silkFile, "-tencent")
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil { //获取输出对象，可以从该对象中读取输出结果
+		return "", err
+	}
+	defer os.Remove(silkFile)
+	tresult, _ := ioutil.ReadFile(silkFile)
+	return base64.StdEncoding.EncodeToString(tresult), nil
+}
+
+// VoiceSilkToMp3 Silk转Mp3 silk->mp3 Output: []byte  暂未写
+func VoiceSilkToMp3(base64EncodedSilk string) ([]byte, error) {
+	return nil, nil
+}
+
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
 	return BotManager{QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 }
 
-// 设置发送消息的时延 单位毫秒 默认1000
+// SetSendDelayed 设置发送消息的时延 单位毫秒 默认1000
 func (b *BotManager) SetSendDelayed(Millisecond int) {
 	b.delayed = Millisecond
 }
 
-// 开始连接
+// Start 开始连接
 func (b *BotManager) Start() error {
 	b.Running = true
 	go b.receiveSendPack()
@@ -273,7 +307,7 @@ func (b *BotManager) Start() error {
 	return nil
 }
 
-// 发送消息函数
+// Send 发送消息函数
 func (b *BotManager) Send(sendMsgPack SendMsgPack) {
 	select {
 	case b.SendChan <- sendMsgPack:
@@ -281,7 +315,7 @@ func (b *BotManager) Send(sendMsgPack SendMsgPack) {
 	}
 }
 
-// 停止
+// Stop 停止
 func (b *BotManager) Stop() {
 	if !b.Running {
 		return
@@ -290,7 +324,7 @@ func (b *BotManager) Stop() {
 	close(b.SendChan)
 }
 
-// 撤回消息
+// ReCallMsg 撤回消息
 func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) error {
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=PbMessageSvc.PbMsgWithDraw&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": GroupID, "MsgSeq": MsgSeq, "MsgRandom": MsgRandom})
 	if err != nil {
@@ -309,7 +343,7 @@ func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) error {
 	}
 }
 
-// 刷新Key
+// RefreshKey 刷新Key
 func (b *BotManager) RefreshKey() error {
 	res, err := requests.Get(b.OPQUrl + "/v1/RefreshKeys?qq=" + strconv.FormatInt(b.QQ, 10))
 	if err != nil {
@@ -328,7 +362,7 @@ func (b *BotManager) RefreshKey() error {
 	}
 }
 
-// 发公告 Pinned 1为置顶,0为普通公告 announceType 发布类型(10为使用弹窗公告,20为发送给新成员,其他暂未知)
+// Announce 发公告 Pinned 1为置顶,0为普通公告 announceType 发布类型(10为使用弹窗公告,20为发送给新成员,其他暂未知)
 func (b *BotManager) Announce(title, text string, pinned, announceType int, groupID int64) error {
 	var result Result
 	res, err := requests.PostJson(b.OPQUrl+"/v1/Group/Announce?qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "Title": title, "Text": text, "Pinned": pinned, "Type": announceType})
@@ -345,7 +379,7 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 	return nil
 }
 
-// 戳戳 sendType  0戳好友 1戳群友 sendType=0 时可以不填此字段 sendType=1 时不能为空
+// Chuo 戳戳 sendType  0戳好友 1戳群友 sendType=0 时可以不填此字段 sendType=1 时不能为空
 func (b *BotManager) Chuo(sendType int, groupID, userId int64) error {
 	var result Result
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0xed3_1&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId, "type": sendType})
@@ -362,7 +396,7 @@ func (b *BotManager) Chuo(sendType int, groupID, userId int64) error {
 	return nil
 }
 
-// 设置管理员 flag 1为设置管理员 2为取消管理员
+// SetAdmin 设置管理员 flag 1为设置管理员 2为取消管理员
 func (b *BotManager) SetAdmin(flag int, groupID, userId int64) error {
 	var result Result
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x55c_1&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId, "Flag": flag})
@@ -379,7 +413,102 @@ func (b *BotManager) SetAdmin(flag int, groupID, userId int64) error {
 	return nil
 }
 
-// 设置禁言 flag 0为设置全体禁言 1为设置某人禁言 ShutTime 0为取消禁言 >0为禁言分钟数 全体禁言>0为开启禁言
+// GetUserInfo 获取用户信息
+func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
+	var result UserInfo
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=GetUserInfo&qq="+strconv.FormatInt(b.QQ, 10), map[string]int64{"UserID": qq})
+	if err != nil {
+		// log.Println(err.Error())
+		return result, err
+	}
+	log.Println(res.Text())
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// KickGroupMember 踢出群成员
+func (b *BotManager) KickGroupMember(newNick string, groupID, userId int64) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=GroupMgr&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "ActionUserID": userId, "ActionType": 3, "Content": ""})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// SetGroupNewNick 设置群名片
+func (b *BotManager) SetGroupNewNick(newNick string, groupID, userId int64) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.ModifyGroupCardReq&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId, "NewNick": newNick})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// SetGroupUniqueTitle 设置群头衔
+func (b *BotManager) SetGroupUniqueTitle(newNick string, groupID, userId int64) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=OidbSvc.0x8fc_2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "UserID": userId, "NewNick": newNick})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// GetFriendList 获取好友列表
+func (b *BotManager) GetFriendList(startIndex int) (FriendList, error) {
+	var result FriendList
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetFriendListReq&timeout=10&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"StartIndex": startIndex})
+	if err != nil {
+		return result, err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// GetGroupList 获取好友列表
+func (b *BotManager) GetGroupList(nextToken string) (GroupList, error) {
+	var result GroupList
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopListReqV2&timeout=10&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"NextToken": nextToken})
+	if err != nil {
+		return result, err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// SetForbidden 设置禁言 flag 0为设置全体禁言 1为设置某人禁言 ShutTime 0为取消禁言 >0为禁言分钟数 全体禁言>0为开启禁言
 func (b *BotManager) SetForbidden(flag, ShutTime int, groupID, userId int64) error {
 	var result Result
 	if flag == 0 {
@@ -414,7 +543,7 @@ func (b *BotManager) SetForbidden(flag, ShutTime int, groupID, userId int64) err
 	return nil
 }
 
-// 下载文件 groupId 为0 是下载好友分享文件
+// GetFile 下载文件 groupId 为0 是下载好友分享文件
 func (b *BotManager) GetFile(fileId string, groupID int64) (FriendFileResult, GroupFileResult, error) {
 	var friendFileResult FriendFileResult
 	var groupFileResult GroupFileResult
@@ -440,9 +569,9 @@ func (b *BotManager) GetFile(fileId string, groupID int64) (FriendFileResult, Gr
 	return friendFileResult, groupFileResult, nil
 }
 
-// 获取用户信息
-func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
-	var result UserInfo
+// GetUserCardInfo 获取用户信息
+func (b *BotManager) GetUserCardInfo(qq int64) (UserCardInfo, error) {
+	var result UserCardInfo
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SummaryCard.ReqSummaryCard&qq="+strconv.FormatInt(b.QQ, 10), map[string]int64{"UserID": qq})
 	if err != nil {
 		// log.Println(err.Error())
@@ -456,7 +585,28 @@ func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
 	return result, nil
 }
 
-// QQ赞 次数
+// OldSendVoice 发送语音 旧版 将被移出
+func (b *BotManager) OldSendVoice(userID int64, sendToType int, data string) error {
+	//var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsg&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"toUser": userID, "sendToType": sendToType, "sendMsgType": "VoiceMsg", "content": "",
+		"groupid":        0,
+		"atUser":         0,
+		"voiceUrl":       "",
+		"voiceBase64Buf": data,
+	})
+	if err != nil {
+		// log.Println(err.Error())
+		return err
+	}
+	log.Println(res.Text())
+	//err = res.Json(&result)
+	//if err != nil {
+	//	return result, err
+	//}
+	return nil
+}
+
+// Zan QQ赞 次数
 func (b *BotManager) Zan(qq int64, num int) int {
 	var result Result
 	success := 0
@@ -481,7 +631,7 @@ func MacroId() string {
 	return "[" + keyRecord + "]"
 }
 
-// At宏
+// MacroAt At宏
 func MacroAt(qqs []int64) string {
 	var qqsStr []string
 	for i := range qqs {
@@ -548,7 +698,7 @@ func (b *BotManager) AddEvent(EventName string, f interface{}) error {
 
 }
 
-// 注册 发送函数的中间件 2为最先执行 0为最后执行
+// RegMiddleware 注册 发送函数的中间件 2为最先执行 0为最后执行
 func (b *BotManager) RegMiddleware(priority int, f func(m map[string]interface{}) map[string]interface{}) error {
 	fVal := reflect.ValueOf(f)
 	if fVal.Kind() != reflect.Func {

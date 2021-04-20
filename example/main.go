@@ -23,6 +23,7 @@ func main() {
 		log.Println(err.Error())
 	}
 	defer opqBot.Stop()
+
 	//log.Println(opqBot.RegMiddleware(1, func(m map[string]interface{}) map[string]interface{} {
 	//	//m["Content"] = "测试"
 	//	m = map[string]interface{}{"reason": "消息违规"}
@@ -30,6 +31,15 @@ func main() {
 	//}))
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
+			if packet.Content == "silk" {
+				b, err := OPQBot.VoiceMp3ToSilk("./secret base ~君がくれたもの~ (10 years after Ver.).mp3")
+				if err != nil {
+					log.Println(err.Error())
+					return
+				}
+				opqBot.OldSendVoice(packet.FromGroupID, 2, b)
+
+			}
 			if packet.Content == "公告测试" {
 				fmt.Println(opqBot.Announce("公告测试", "内容", 0, 10, packet.FromGroupID))
 				return
@@ -184,7 +194,7 @@ func main() {
 						Content:    OPQBot.SendTypeTextMsgContent{Content: err.Error()},
 					})
 				}
-				user, err := opqBot.GetUserInfo(qq)
+				user, err := opqBot.GetUserCardInfo(qq)
 				log.Println(user)
 				if err != nil {
 					opqBot.Send(OPQBot.SendMsgPack{
@@ -231,6 +241,27 @@ func main() {
 		log.Println(err.Error())
 	}
 	err = opqBot.AddEvent(OPQBot.EventNameOnOther, func(botQQ int64, e interface{}) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupSystemNotify, func(botQQ int64, e OPQBot.GroupSystemNotifyPack) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupRevoke, func(botQQ int64, e OPQBot.GroupRevokePack) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupJoin, func(botQQ int64, e OPQBot.GroupJoinPack) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdmin, func(botQQ int64, e OPQBot.GroupAdminPack) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExit, func(botQQ int64, e OPQBot.GroupExitPack) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExitSuccess, func(botQQ int64, e OPQBot.GroupExitSuccessPack) {
+		log.Println(e)
+	})
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdminSysNotify, func(botQQ int64, e OPQBot.GroupAdminSysNotifyPack) {
 		log.Println(e)
 	})
 	if err != nil {

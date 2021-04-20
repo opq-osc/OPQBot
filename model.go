@@ -326,7 +326,7 @@ type Result struct {
 	Msg string `json:"Msg"`
 	Ret int    `json:"Ret"`
 }
-type UserInfo struct {
+type UserCardInfo struct {
 	Age       int    `json:"Age"`
 	City      string `json:"City"`
 	LikeNums  int    `json:"LikeNums"`
@@ -346,4 +346,63 @@ type FriendFileResult struct {
 type GroupFileResult struct {
 	Ret int    `json:"Ret"`
 	URL string `json:"Url"`
+}
+
+// FriendList 获取好友列表表单
+type FriendList struct {
+	FriendCount int `json:"Friend_count"`
+	Friendlist  []struct {
+		FriendUin int    `json:"FriendUin"`
+		IsRemark  bool   `json:"IsRemark"`
+		NickName  string `json:"NickName"`
+		OnlineStr string `json:"OnlineStr"`
+		Remark    string `json:"Remark"`
+		Status    int    `json:"Status"`
+	} `json:"Friendlist"`
+	GetfriendCount    int `json:"GetfriendCount"`
+	StartIndex        int `json:"StartIndex"`
+	TotoalFriendCount int `json:"Totoal_friend_count"`
+}
+
+// GroupList 获取群列表表单
+type GroupList struct {
+	Count     int    `json:"Count"`
+	NextToken string `json:"NextToken"`
+	TroopList []struct {
+		GroupID          int    `json:"GroupId"`
+		GroupMemberCount int    `json:"GroupMemberCount"`
+		GroupName        string `json:"GroupName"`
+		GroupNotice      string `json:"GroupNotice"`
+		GroupOwner       int64  `json:"GroupOwner"`
+		GroupTotalCount  int    `json:"GroupTotalCount"`
+	} `json:"TroopList"`
+}
+
+// UserInfo 用户信息表单
+type UserInfo struct {
+	Code int `json:"code"`
+	Data struct {
+		Astro         int    `json:"astro"`
+		AvatarURL     string `json:"avatarUrl"`
+		Bitmap        string `json:"bitmap"`
+		Bluevip       int    `json:"bluevip"`
+		Commfrd       int    `json:"commfrd"`
+		Friendship    int    `json:"friendship"`
+		From          string `json:"from"`
+		Gender        int    `json:"gender"`
+		Greenvip      int    `json:"greenvip"`
+		IntimacyScore int    `json:"intimacyScore"`
+		IsFriend      int    `json:"isFriend"`
+		Logolabel     string `json:"logolabel"`
+		Nickname      string `json:"nickname"`
+		Publicwalfare int    `json:"publicwalfare"`
+		Qqvip         int    `json:"qqvip"`
+		Qzone         int    `json:"qzone"`
+		Realname      string `json:"realname"`
+		Smartname     string `json:"smartname"`
+		Uin           int    `json:"uin"`
+	} `json:"data"`
+	Default int    `json:"default"`
+	Message string `json:"message"`
+	Subcode int    `json:"subcode"`
 }
