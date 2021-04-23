@@ -460,7 +460,7 @@ func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
 }
 
 // KickGroupMember 踢出群成员
-func (b *BotManager) KickGroupMember(newNick string, groupID, userId int64) error {
+func (b *BotManager) KickGroupMember(groupID, userId int64) error {
 	var result Result
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=GroupMgr&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "ActionUserID": userId, "ActionType": 3, "Content": ""})
 	if err != nil {
