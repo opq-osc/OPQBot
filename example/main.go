@@ -15,7 +15,7 @@ import (
 var ZanNote = map[int64]int{}
 
 func main() {
-	opqBot := OPQBot.NewBotManager(2629326992, "http://raspberrypi.local:8888")
+	opqBot := OPQBot.NewBotManager(2629326992, "http://192.168.0.1:8889")
 	// 设置发送队列每次发送的间隔时间 默认1000ms
 	opqBot.SetSendDelayed(1000)
 	err := opqBot.Start()
@@ -29,7 +29,7 @@ func main() {
 	//	m = map[string]interface{}{"reason": "消息违规"}
 	//	return m
 	//}))
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			if packet.Content == "silk" {
 				b, err := OPQBot.VoiceMp3ToSilk("./secret base ~君がくれたもの~ (10 years after Ver.).mp3")
@@ -274,6 +274,13 @@ func main() {
 	//	Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "你好", PicUrl: "https://img-home.csdnimg.cn/images/20201124032511.png"},
 	//})
 	time.Sleep(24 * time.Hour)
+}
+func VerifyBlackList(botQQ int64, packet OPQBot.GroupMsgPack) {
+	if packet.FromUserID == 2435932516 {
+		log.Println("触发黑名单")
+		return
+	}
+	packet.Next(botQQ, packet)
 }
 
 type Pic struct {

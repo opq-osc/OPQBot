@@ -29,7 +29,7 @@ type BotManager struct {
 	OPQUrl         string
 	myRecord       map[string]MyRecord
 	myRecordLocker sync.RWMutex
-	onEvent        map[string]reflect.Value
+	onEvent        map[string][]reflect.Value
 	middleware     []middleware
 	delayed        int
 	locker         sync.RWMutex
@@ -70,7 +70,7 @@ func VoiceSilkToMp3(base64EncodedSilk string) ([]byte, error) {
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
-	return BotManager{QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	return BotManager{QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 }
 
 // SetSendDelayed 设置发送消息的时延 单位毫秒 默认1000
@@ -104,15 +104,15 @@ func (b *BotManager) Start() error {
 	_ = c.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
 		// log.Println("连接成功！")
 		f, ok := b.onEvent[EventNameOnConnected]
-		if ok {
-			f.Call([]reflect.Value{})
+		if ok && len(f) >= 1 {
+			f[0].Call([]reflect.Value{})
 		}
 	})
 	_ = c.On(gosocketio.OnDisconnection, func(h *gosocketio.Channel) {
 		// log.Println("连接断开！")
 		f, ok := b.onEvent[EventNameOnDisconnected]
-		if ok {
-			f.Call([]reflect.Value{})
+		if ok && len(f) >= 1 {
+			f[0].Call([]reflect.Value{})
 		}
 	})
 	_ = c.On("OnGroupMsgs", func(h *gosocketio.Channel, args returnPack) {
@@ -122,7 +122,7 @@ func (b *BotManager) Start() error {
 		b.locker.RLock()
 		defer b.locker.RUnlock()
 		f, ok := b.onEvent["OnGroupMsgs"]
-		if ok {
+		if ok && len(f) >= 1 {
 			result := GroupMsgPack{}
 			err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 			if err != nil {
@@ -154,7 +154,10 @@ func (b *BotManager) Start() error {
 					b.myRecordLocker.Unlock()
 				}()
 			}
-			f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			result.f = f
+			result.NowIndex = 0
+			result.MaxIndex = len(f) - 1
+			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 		}
 		//log.Println(args)
 	})
@@ -165,14 +168,17 @@ func (b *BotManager) Start() error {
 		b.locker.RLock()
 		defer b.locker.RUnlock()
 		f, ok := b.onEvent["OnFriendMsgs"]
-		if ok {
+		if ok && len(f) >= 1 {
 			result := FriendMsgPack{}
 			err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 			if err != nil {
 				log.Println("解析包错误")
 				return
 			}
-			f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			result.f = f
+			result.NowIndex = 0
+			result.MaxIndex = len(f) - 1
+			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 		}
 		//log.Println(args)
 	})
@@ -195,112 +201,136 @@ func (b *BotManager) Start() error {
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupJoin]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupJoinPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupAdmin:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupAdmin]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupAdminPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupExit:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupExit]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupExitPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupExitSuccess:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupExitSuccess]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupExitSuccessPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupAdminSysNotify:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupAdminSysNotify]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupAdminSysNotifyPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupRevoke:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupRevoke]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupRevokePack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupShut:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupShut]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupShutPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		case EventNameOnGroupSystemNotify:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnGroupSystemNotify]
-			if ok {
+			if ok && len(f) >= 1 {
 				result := GroupSystemNotifyPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
 					log.Println("解析包错误")
 					return
 				}
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				result.f = f
+				result.NowIndex = 0
+				result.MaxIndex = len(f) - 1
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 			}
 		default:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnOther]
-			if ok {
-				f.Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args)})
+			if ok && len(f) >= 1 {
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args)})
 			}
 		}
 	})
@@ -643,63 +673,64 @@ func MacroAtAll() string {
 	return "[ATALL()]"
 }
 
-func (b *BotManager) AddEvent(EventName string, f interface{}) error {
-	fVal := reflect.ValueOf(f)
-	if fVal.Kind() != reflect.Func {
-		return errors.New("NotFuncError")
-	}
-	var okStruck string
-	switch EventName {
-	case EventNameOnFriendMessage:
-		okStruck = "OPQBot.FriendMsgPack"
-	case EventNameOnGroupMessage:
-		okStruck = "OPQBot.GroupMsgPack"
-	case EventNameOnGroupJoin:
-		okStruck = "OPQBot.GroupJoinPack"
-	case EventNameOnGroupAdmin:
-		okStruck = "OPQBot.GroupAdminPack"
-	case EventNameOnGroupExit:
-		okStruck = "OPQBot.GroupExitPack"
-	case EventNameOnGroupExitSuccess:
-		okStruck = "OPQBot.GroupExitSuccessPack"
-	case EventNameOnGroupAdminSysNotify:
-		okStruck = "OPQBot.GroupAdminSysNotifyPack"
-	case EventNameOnGroupRevoke:
-		okStruck = "OPQBot.GroupRevokePack"
-	case EventNameOnGroupShut:
-		okStruck = "OPQBot.GroupShutPack"
-	case EventNameOnGroupSystemNotify:
-		okStruck = "OPQBot.GroupSystemNotifyPack"
-	case EventNameOnDisconnected:
-		okStruck = "ok"
-	case EventNameOnConnected:
-		okStruck = "ok"
-	case EventNameOnOther:
-		okStruck = "interface {}"
-	default:
-		return errors.New("Unknown EventName ")
-	}
+func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
+	var events []reflect.Value
+	for _, v := range f {
+		fVal := reflect.ValueOf(v)
+		if fVal.Kind() != reflect.Func {
+			return errors.New("NotFuncError")
+		}
+		var okStruck string
+		switch EventName {
+		case EventNameOnFriendMessage:
+			okStruck = "OPQBot.FriendMsgPack"
+		case EventNameOnGroupMessage:
+			okStruck = "OPQBot.GroupMsgPack"
+		case EventNameOnGroupJoin:
+			okStruck = "OPQBot.GroupJoinPack"
+		case EventNameOnGroupAdmin:
+			okStruck = "OPQBot.GroupAdminPack"
+		case EventNameOnGroupExit:
+			okStruck = "OPQBot.GroupExitPack"
+		case EventNameOnGroupExitSuccess:
+			okStruck = "OPQBot.GroupExitSuccessPack"
+		case EventNameOnGroupAdminSysNotify:
+			okStruck = "OPQBot.GroupAdminSysNotifyPack"
+		case EventNameOnGroupRevoke:
+			okStruck = "OPQBot.GroupRevokePack"
+		case EventNameOnGroupShut:
+			okStruck = "OPQBot.GroupShutPack"
+		case EventNameOnGroupSystemNotify:
+			okStruck = "OPQBot.GroupSystemNotifyPack"
+		case EventNameOnDisconnected:
+			okStruck = "ok"
+		case EventNameOnConnected:
+			okStruck = "ok"
+		case EventNameOnOther:
+			okStruck = "interface {}"
+		default:
+			return errors.New("Unknown EventName ")
+		}
 
-	if fVal.Type().NumIn() == 0 && okStruck == "ok" {
-		b.locker.Lock()
-		defer b.locker.Unlock()
-		b.onEvent[EventName] = fVal
-		return nil
-	}
-	//log.Println( fVal.Type().In(0).String())
-	if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
-		return errors.New("FuncError, Your Function Should Have " + okStruck)
-	}
+		if fVal.Type().NumIn() == 0 && okStruck == "ok" {
+			events = append(events, fVal)
+			continue
+		}
+		if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
+			return errors.New(EventName + ": FuncError, Your Function " + fVal.Type().Name() + " Should Have " + okStruck)
+		}
 
+		events = append(events, fVal)
+	}
 	b.locker.Lock()
 	defer b.locker.Unlock()
-	b.onEvent[EventName] = fVal
+	b.onEvent[EventName] = events
 	return nil
 
 }
 
-// RegMiddleware 注册 发送函数的中间件 2为最先执行 0为最后执行
-func (b *BotManager) RegMiddleware(priority int, f func(m map[string]interface{}) map[string]interface{}) error {
+// RegSendMiddleware 注册 发送函数的中间件 2为最先执行 0为最后执行
+func (b *BotManager) RegSendMiddleware(priority int, f func(m map[string]interface{}) map[string]interface{}) error {
 	fVal := reflect.ValueOf(f)
 	if fVal.Kind() != reflect.Func {
 		return errors.New("NotFuncError")

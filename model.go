@@ -1,5 +1,7 @@
 package OPQBot
 
+import "reflect"
+
 const (
 	SendToTypeFriend               = 1
 	SendToTypeGroup                = 2
@@ -159,7 +161,23 @@ type MyRecord struct {
 	MsgType     string `json:"MsgType"`
 	Content     string `json:"Content"`
 }
+type Context struct {
+	NowIndex int
+	MaxIndex int
+	f        []reflect.Value
+}
+
+func (ctx *Context) Next(currentQQ int64, result interface{}) {
+	if ctx.NowIndex >= ctx.MaxIndex {
+		return
+	}
+	ctx.NowIndex += 1
+	ctx.f[ctx.NowIndex].Call([]reflect.Value{reflect.ValueOf(currentQQ), reflect.ValueOf(result)})
+
+}
+
 type GroupMsgPack struct {
+	Context
 	Content       string      `json:"Content"`
 	FromGroupID   int64       `json:"FromGroupId"`
 	FromGroupName string      `json:"FromGroupName"`
@@ -172,6 +190,7 @@ type GroupMsgPack struct {
 	RedBaginfo    interface{} `json:"RedBaginfo"`
 }
 type FriendMsgPack struct {
+	Context
 	Content    string      `json:"Content"`
 	FromUin    int64       `json:"FromUin"`
 	MsgSeq     int         `json:"MsgSeq"`
@@ -180,6 +199,7 @@ type FriendMsgPack struct {
 	ToUin      int64       `json:"ToUin"`
 }
 type eventPack struct {
+	Context
 	CurrentPacket struct {
 		Data      interface{} `json:"Data"`
 		WebConnID string      `json:"WebConnId"`
@@ -188,6 +208,7 @@ type eventPack struct {
 }
 
 type GroupJoinPack struct {
+	Context
 	EventData struct {
 		InviteUin int64  `json:"InviteUin"`
 		UserID    int64  `json:"UserID"`
@@ -204,6 +225,7 @@ type GroupJoinPack struct {
 }
 
 type GroupAdminPack struct {
+	Context
 	EventData struct {
 		Flag    int   `json:"Flag"`
 		GroupID int64 `json:"GroupID"`
@@ -220,6 +242,7 @@ type GroupAdminPack struct {
 }
 
 type GroupExitPack struct {
+	Context
 	EventData struct {
 		UserID int64 `json:"UserID"`
 	} `json:"EventData"`
@@ -233,6 +256,7 @@ type GroupExitPack struct {
 	} `json:"EventMsg"`
 }
 type GroupExitSuccessPack struct {
+	Context
 	EventData struct {
 		GroupID int64 `json:"GroupID"`
 	} `json:"EventData"`
@@ -247,6 +271,7 @@ type GroupExitSuccessPack struct {
 }
 
 type GroupAdminSysNotifyPack struct {
+	Context
 	EventData struct {
 		Seq             int64  `json:"Seq"`
 		Type            int    `json:"Type"`
@@ -276,6 +301,7 @@ type GroupAdminSysNotifyPack struct {
 }
 
 type GroupRevokePack struct {
+	Context
 	EventData struct {
 		AdminUserID int   `json:"AdminUserID"`
 		GroupID     int64 `json:"GroupID"`
@@ -293,6 +319,7 @@ type GroupRevokePack struct {
 	} `json:"EventMsg"`
 }
 type GroupShutPack struct {
+	Context
 	EventData struct {
 		GroupID  int64 `json:"GroupID"`
 		ShutTime int   `json:"ShutTime"`
@@ -308,6 +335,7 @@ type GroupShutPack struct {
 	} `json:"EventMsg"`
 }
 type GroupSystemNotifyPack struct {
+	Context
 	EventData struct {
 		Content string `json:"Content"`
 		GroupID int64  `json:"GroupID"`
