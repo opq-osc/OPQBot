@@ -64,9 +64,40 @@ func VoiceMp3ToSilk(mp3Path string) (string, error) {
 	return base64.StdEncoding.EncodeToString(tresult), nil
 }
 
-// VoiceSilkToMp3 Silk转Mp3 silk->mp3 Output: []byte  暂未写
+// VoiceSilkToMp3 Silk转Mp3 silk->mp3 Output: []byte
 func VoiceSilkToMp3(base64EncodedSilk string) ([]byte, error) {
-	return nil, nil
+	decodeBytes, err := base64.StdEncoding.DecodeString(base64EncodedSilk)
+	if err != nil {
+		return decodeBytes, errors.New("转码失败! ")
+	}
+	n, _ := rand.Int(rand.Reader, big.NewInt(100000))
+	name := n.String()
+	mp3file := "./" + name + ".mp3"
+	pcmfile := "./" + name + ".pcm"
+	silk := "./" + name + ".silk"
+	err = ioutil.WriteFile(silk, decodeBytes, os.FileMode(0777))
+	if err != nil {
+		return decodeBytes, errors.New("写文件失败!")
+	}
+	defer os.Remove(silk)
+	var stderr bytes.Buffer
+	cmd := exec.Command("./decoder", silk, pcmfile)
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return decodeBytes, errors.New("silk转pcm失败! ")
+	}
+	cmd = exec.Command("./ffmpeg", "-f", "s16le", "-ar", "24000", "-i", pcmfile, "-ac", "1", mp3file)
+
+	_, err = cmd.CombinedOutput()
+
+	if err != nil {
+		return decodeBytes, errors.New("pcm转mp3失败! ")
+	}
+	defer os.Remove(mp3file)
+	tresult, _ := ioutil.ReadFile(mp3file)
+	defer os.Remove(mp3file)
+	return tresult, nil
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {

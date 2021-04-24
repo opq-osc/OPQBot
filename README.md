@@ -61,6 +61,7 @@ func main()  {
 ```
 
 更多请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
+
 以example文件为准 [example](https://github.com/opq-osc/OPQBot/blob/main/example/main.go)
 
 ### 没人看的更新历史 ✏️
@@ -73,5 +74,5 @@ func main()  {
 20210406    戳一戳功能，example 即是文档
 20210407    删除多余log，完善戳戳
 20210420    添加Mp3转Silk功能和一些其他的功能
-20210424    添加事件的中间件，向下兼容以前的代码，使用看example
+20210424    添加事件的中间件，向下兼容以前的代码，使用看example，完善silk功能
 ```
