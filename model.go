@@ -173,7 +173,6 @@ func (ctx *Context) Next(currentQQ int64, result interface{}) {
 	}
 	ctx.NowIndex += 1
 	ctx.f[ctx.NowIndex].Call([]reflect.Value{reflect.ValueOf(currentQQ), reflect.ValueOf(result)})
-
 }
 
 type GroupMsgPack struct {
