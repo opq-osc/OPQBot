@@ -15,7 +15,7 @@
 |群公告|是|
 
 ### 安装 💡
-`go get github.com/mcoo/OPQBot`
+` github.com/mcoo/OPQBot@latest`
 [使用教程](https://mcenjoy.cn/330/)
 ### 例子 👆
 ```golang
