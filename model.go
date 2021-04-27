@@ -165,6 +165,7 @@ type Context struct {
 	NowIndex int
 	MaxIndex int
 	f        []reflect.Value
+	Bot      *BotManager
 }
 
 func (ctx *Context) Next(currentQQ int64, result interface{}) {

@@ -7,6 +7,7 @@ import (
 	"github.com/mcoo/OPQBot"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -15,7 +16,10 @@ import (
 var ZanNote = map[int64]int{}
 
 func main() {
-	opqBot := OPQBot.NewBotManager(2629326992, "http://192.168.0.1:8889")
+	if len(os.Args) != 2 {
+		return
+	}
+	opqBot := OPQBot.NewBotManager(2629326992, os.Args[1])
 	// 设置发送队列每次发送的间隔时间 默认1000ms
 	opqBot.SetSendDelayed(1000)
 	err := opqBot.Start()
@@ -31,7 +35,11 @@ func main() {
 	//}))
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
-			if packet.Content == "silk" {
+			if packet.Content == "#上传测试" {
+				//b,_ := ioutil.ReadFile("./1.mp3")base64.StdEncoding.EncodeToString(b)
+				log.Println(opqBot.UploadFileWithBase64("1.mp3", "MTIzMTIzMTIzMjEz", packet.FromGroupID, true))
+			}
+			if packet.Content == "#silk" {
 				b, err := OPQBot.VoiceMp3ToSilk("./secret base ~君がくれたもの~ (10 years after Ver.).mp3")
 				if err != nil {
 					log.Println(err.Error())
@@ -40,15 +48,15 @@ func main() {
 				opqBot.OldSendVoice(packet.FromGroupID, 2, b)
 
 			}
-			if packet.Content == "公告测试" {
+			if packet.Content == "#公告测试" {
 				fmt.Println(opqBot.Announce("公告测试", "内容", 0, 10, packet.FromGroupID))
 				return
 			}
-			if packet.Content == "刷新" {
+			if packet.Content == "#刷新" {
 				_ = opqBot.RefreshKey()
 				return
 			}
-			if packet.Content == "Base64图片测试" {
+			if packet.Content == "#Base64图片测试" {
 				pic, _ := ioutil.ReadFile("./test.jpg")
 				opqBot.Send(OPQBot.SendMsgPack{
 					SendToType: OPQBot.SendToTypeGroup,
@@ -58,7 +66,7 @@ func main() {
 				return
 			}
 			// 只有消息内容中含有宏OPQBot.MacroId() record 中才有消息的值，才能去用于撤回消息！
-			if packet.Content == "撤回测试" {
+			if packet.Content == "#撤回测试" {
 				opqBot.Send(OPQBot.SendMsgPack{
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,
@@ -69,7 +77,7 @@ func main() {
 					},
 				})
 			}
-			if packet.Content == "赞我" {
+			if packet.Content == "#赞我" {
 				i, ok := ZanNote[packet.FromUserID]
 				if ok {
 					if i == time.Now().Day() {
@@ -276,7 +284,7 @@ func main() {
 	time.Sleep(24 * time.Hour)
 }
 func VerifyBlackList(botQQ int64, packet OPQBot.GroupMsgPack) {
-	if packet.FromUserID == 2435932516 {
+	if packet.FromUserID == 123123123 {
 		log.Println("触发黑名单")
 		return
 	}

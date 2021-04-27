@@ -7,8 +7,8 @@ import (
 	"errors"
 	"github.com/asmcos/requests"
 	"github.com/goinggo/mapstructure"
-	"github.com/graarh/golang-socketio"
-	"github.com/graarh/golang-socketio/transport"
+	gosocketio "github.com/mcoo/OPQBot/golang-socketio"
+	"github.com/mcoo/OPQBot/golang-socketio/transport"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -132,21 +132,28 @@ func (b *BotManager) Start() error {
 	if err != nil {
 		return err
 	}
-	_ = c.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
+	err = c.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
 		// log.Println("连接成功！")
 		f, ok := b.onEvent[EventNameOnConnected]
 		if ok && len(f) >= 1 {
 			f[0].Call([]reflect.Value{})
 		}
 	})
-	_ = c.On(gosocketio.OnDisconnection, func(h *gosocketio.Channel) {
+	if err != nil {
+		return err
+	}
+	err = c.On(gosocketio.OnDisconnection, func(h *gosocketio.Channel) {
 		// log.Println("连接断开！")
 		f, ok := b.onEvent[EventNameOnDisconnected]
 		if ok && len(f) >= 1 {
 			f[0].Call([]reflect.Value{})
 		}
 	})
-	_ = c.On("OnGroupMsgs", func(h *gosocketio.Channel, args returnPack) {
+	if err != nil {
+		return err
+	}
+	err = c.On("OnGroupMsgs", func(h *gosocketio.Channel, args returnPack) {
+		//log.Println(args)
 		if args.CurrentQQ != b.QQ {
 			return
 		}
@@ -185,6 +192,7 @@ func (b *BotManager) Start() error {
 					b.myRecordLocker.Unlock()
 				}()
 			}
+			result.Bot = b
 			result.f = f
 			result.NowIndex = 0
 			result.MaxIndex = len(f) - 1
@@ -192,7 +200,10 @@ func (b *BotManager) Start() error {
 		}
 		//log.Println(args)
 	})
-	_ = c.On("OnFriendMsgs", func(h *gosocketio.Channel, args returnPack) {
+	if err != nil {
+		return err
+	}
+	err = c.On("OnFriendMsgs", func(h *gosocketio.Channel, args returnPack) {
 		if args.CurrentQQ != b.QQ {
 			return
 		}
@@ -206,6 +217,7 @@ func (b *BotManager) Start() error {
 				log.Println("解析包错误")
 				return
 			}
+			result.Bot = b
 			result.f = f
 			result.NowIndex = 0
 			result.MaxIndex = len(f) - 1
@@ -213,7 +225,10 @@ func (b *BotManager) Start() error {
 		}
 		//log.Println(args)
 	})
-	_ = c.On("OnEvents", func(h *gosocketio.Channel, args eventPack) {
+	if err != nil {
+		return err
+	}
+	err = c.On("OnEvents", func(h *gosocketio.Channel, args eventPack) {
 		if args.CurrentQQ != b.QQ {
 			return
 		}
@@ -239,6 +254,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -255,6 +271,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -271,6 +288,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -287,6 +305,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -303,6 +322,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -319,6 +339,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -335,6 +356,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -351,6 +373,7 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
+				result.Bot = b
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
@@ -365,6 +388,9 @@ func (b *BotManager) Start() error {
 			}
 		}
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -427,6 +453,60 @@ func (b *BotManager) RefreshKey() error {
 func (b *BotManager) Announce(title, text string, pinned, announceType int, groupID int64) error {
 	var result Result
 	res, err := requests.PostJson(b.OPQUrl+"/v1/Group/Announce?qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "Title": title, "Text": text, "Pinned": pinned, "Type": announceType})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// UploadFileWithBase64 上传群文件
+func (b *BotManager) UploadFileWithBase64(FileName, FileBase64 string, ToUserUid int64, Notify bool) error {
+	var result Result
+	//log.Println(strconv.FormatInt(b.QQ, 10),map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64":FileBase64,"SendMsgType":"UploadGroupFile"})
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
+	if err != nil {
+		return err
+	}
+	//log.Println(res.R.Request.RequestURI)
+	//log.Println(json.Marshal(map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64":FileBase64,"SendMsgType":"UploadGroupFile"}))
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// UploadFileWithFileUrl 上传群文件
+func (b *BotManager) UploadFileWithFileUrl(FileName, FileUrl string, ToUserUid int64, Notify bool) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieUrl": FileUrl, "SendMsgType": "UploadGroupFile"})
+	if err != nil {
+		return err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return err
+	}
+	if result.Ret != 0 {
+		return errors.New(result.Msg)
+	}
+	return nil
+}
+
+// UploadFileWithFilePath 上传群文件
+func (b *BotManager) UploadFileWithFilePath(FilePath string, ToUserUid int64, Notify bool) error {
+	var result Result
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FliePath": FilePath, "SendMsgType": "UploadGroupFile"})
 	if err != nil {
 		return err
 	}
