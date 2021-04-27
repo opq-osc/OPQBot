@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"github.com/asmcos/requests"
 	"github.com/goinggo/mapstructure"
@@ -14,6 +15,7 @@ import (
 	"math/big"
 	"os"
 	"os/exec"
+	"os/signal"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -27,6 +29,9 @@ type BotManager struct {
 	SendChan       chan SendMsgPack
 	Running        bool
 	OPQUrl         string
+	MaxRetryCount  int
+	Done           chan int
+	wg             sync.WaitGroup
 	myRecord       map[string]MyRecord
 	myRecordLocker sync.RWMutex
 	onEvent        map[string][]reflect.Value
@@ -38,6 +43,29 @@ type BotManager struct {
 type middleware struct {
 	priority int
 	fun      func(m map[string]interface{}) map[string]interface{}
+}
+
+func (b *BotManager) SetMaxRetryCount(maxRetryCount int) {
+	b.MaxRetryCount = maxRetryCount
+}
+
+func (b *BotManager) Wait() {
+	b.wg.Wait()
+	if b.MaxRetryCount > 0 {
+		time.Sleep(5 * time.Second)
+		for i := 0; i < b.MaxRetryCount; i++ {
+			log.Printf("重连尝试第%d/%d次\n", i+1, b.MaxRetryCount)
+			err := b.Start()
+			if err != nil {
+				log.Println(err)
+			}
+			b.wg.Wait()
+			time.Sleep(5 * time.Second)
+		}
+	}
+	//b.onEvent["BotStop"]
+	b.Running = false
+	log.Println("Bot结束")
 }
 
 // VoiceMp3ToSilk Mp3转Silk mp3->silk Output: base64 String
@@ -101,7 +129,7 @@ func VoiceSilkToMp3(base64EncodedSilk string) ([]byte, error) {
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
-	return BotManager{QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	return BotManager{Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 }
 
 // SetSendDelayed 设置发送消息的时延 单位毫秒 默认1000
@@ -112,24 +140,55 @@ func (b *BotManager) SetSendDelayed(Millisecond int) {
 // Start 开始连接
 func (b *BotManager) Start() error {
 	b.Running = true
-	go b.receiveSendPack()
+	b.wg.Add(3)
+	interrupt := make(chan os.Signal, 1)
+	restart := make(chan int)
+	signal.Notify(interrupt, os.Interrupt, os.Kill)
 	go func() {
-		for {
-			if len(b.myRecord) > 50 {
-				b.myRecordLocker.Lock()
-				for i, v := range b.myRecord {
-					if time.Now().Sub(time.Unix(int64(v.MsgTime), 0)) > time.Second*180 {
-						delete(b.myRecord, i)
-					}
-				}
-				b.myRecordLocker.Unlock()
-			}
-			time.Sleep(5 * time.Second)
+		select {
+		case _ = <-interrupt:
+			log.Println("程序被用户终止,正在进行释放资源操作!")
+			b.MaxRetryCount = 0
+			b.Done <- 1
+			b.Done <- 2
+			b.wg.Done()
+		case _ = <-restart:
+			log.Println("程序重连尝试!")
+			b.Done <- 1
+			b.Done <- 2
+			b.wg.Done()
 		}
 
 	}()
+	go b.receiveSendPack()
+	go func() {
+		for {
+			select {
+			case <-b.Done:
+				b.wg.Done()
+				return
+			default:
+				go func() {
+					if len(b.myRecord) > 50 {
+						b.myRecordLocker.Lock()
+						for i, v := range b.myRecord {
+							if time.Now().Sub(time.Unix(int64(v.MsgTime), 0)) > time.Second*180 {
+								delete(b.myRecord, i)
+							}
+						}
+						b.myRecordLocker.Unlock()
+					}
+				}()
+				time.Sleep(10 * time.Second)
+			}
+
+		}
+
+	}()
+
 	c, err := gosocketio.Dial(strings.ReplaceAll(b.OPQUrl, "http://", "ws://")+"/socket.io/?EIO=3&transport=websocket", transport.GetDefaultWebsocketTransport())
 	if err != nil {
+		restart <- 1
 		return err
 	}
 	err = c.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
@@ -140,6 +199,7 @@ func (b *BotManager) Start() error {
 		}
 	})
 	if err != nil {
+		restart <- 1
 		return err
 	}
 	err = c.On(gosocketio.OnDisconnection, func(h *gosocketio.Channel) {
@@ -148,8 +208,10 @@ func (b *BotManager) Start() error {
 		if ok && len(f) >= 1 {
 			f[0].Call([]reflect.Value{})
 		}
+		restart <- 1
 	})
 	if err != nil {
+		restart <- 1
 		return err
 	}
 	err = c.On("OnGroupMsgs", func(h *gosocketio.Channel, args returnPack) {
@@ -179,14 +241,6 @@ func (b *BotManager) Start() error {
 						MsgType:     result.MsgType,
 						Content:     result.Content,
 					}
-					//bRecord,err := json.Marshal(record)
-					//if err != nil {
-					//	return
-					//}
-					//record.MsgRandom = result.MsgRandom
-					//record.MsgTime = result.MsgTime
-					//record.MsgSeq = result.MsgSeq
-					//keyRecord := base64.StdEncoding.EncodeToString(bRecord)
 					b.myRecordLocker.Lock()
 					b.myRecord[id[1]] = record
 					b.myRecordLocker.Unlock()
@@ -226,6 +280,7 @@ func (b *BotManager) Start() error {
 		//log.Println(args)
 	})
 	if err != nil {
+		restart <- 1
 		return err
 	}
 	err = c.On("OnEvents", func(h *gosocketio.Channel, args eventPack) {
@@ -389,6 +444,7 @@ func (b *BotManager) Start() error {
 		}
 	})
 	if err != nil {
+		restart <- 1
 		return err
 	}
 	return nil
@@ -469,13 +525,12 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 // UploadFileWithBase64 上传群文件
 func (b *BotManager) UploadFileWithBase64(FileName, FileBase64 string, ToUserUid int64, Notify bool) error {
 	var result Result
-	//log.Println(strconv.FormatInt(b.QQ, 10),map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64":FileBase64,"SendMsgType":"UploadGroupFile"})
+	js, _ := json.Marshal(map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
+	log.Println(string(js))
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
 	if err != nil {
 		return err
 	}
-	//log.Println(res.R.Request.RequestURI)
-	//log.Println(json.Marshal(map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64":FileBase64,"SendMsgType":"UploadGroupFile"}))
 	err = res.Json(&result)
 	if err != nil {
 		return err
@@ -866,243 +921,247 @@ func (b *BotManager) receiveSendPack() {
 	log.Println("QQ发送信息通道开启")
 OuterLoop:
 	for {
-		if !b.Running {
-			break
-		}
-		record := MyRecord{
-			FromGroupID: 0,
-			MsgRandom:   0,
-			MsgSeq:      0,
-			MsgTime:     0,
-			MsgType:     "",
-			Content:     "",
-		}
-		sendMsgPack := <-b.SendChan
-		sendJsonPack := make(map[string]interface{})
-		sendJsonPack["ToUserUid"] = sendMsgPack.ToUserUid
-		record.FromGroupID = sendMsgPack.ToUserUid
-		switch content := sendMsgPack.Content.(type) {
-		case SendTypeTextMsgContent:
-			sendJsonPack["SendMsgType"] = "TextMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["Content"] = content.Content
-			record.Content = content.Content
-			record.MsgType = "TextMsg"
+		select {
+		case <-b.Done:
+			log.Println("发信通道关闭")
+			b.wg.Done()
+			return
+		case sendMsgPack := <-b.SendChan:
+			record := MyRecord{
+				FromGroupID: 0,
+				MsgRandom:   0,
+				MsgSeq:      0,
+				MsgTime:     0,
+				MsgType:     "",
+				Content:     "",
+			}
+			sendJsonPack := make(map[string]interface{})
+			sendJsonPack["ToUserUid"] = sendMsgPack.ToUserUid
+			record.FromGroupID = sendMsgPack.ToUserUid
+			switch content := sendMsgPack.Content.(type) {
+			case SendTypeTextMsgContent:
+				sendJsonPack["SendMsgType"] = "TextMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+				record.Content = content.Content
+				record.MsgType = "TextMsg"
+			case SendTypeTextMsgContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "TextMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["GroupID"] = content.Group
+				record.Content = content.Content
+				record.MsgType = "TextMsg"
+			case SendTypePicMsgByUrlContent:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicUrl"] = content.PicUrl
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["FlashPic"] = content.Flash
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			case SendTypePicMsgByUrlContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicUrl"] = content.PicUrl
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["FlashPic"] = content.Flash
+				sendJsonPack["GroupID"] = content.Group
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			case SendTypePicMsgByLocalContent:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicPath"] = content.Path
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["FlashPic"] = content.Flash
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			case SendTypePicMsgByLocalContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicPath"] = content.Path
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["FlashPic"] = content.Flash
+				sendJsonPack["GroupID"] = content.Group
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			case SendTypePicMsgByMd5Content:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicMd5s"] = content.Md5
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["FlashPic"] = content.Flash
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			case SendTypeVoiceByUrlContent:
+				sendJsonPack["SendMsgType"] = "VoiceMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["VoiceUrl"] = content.VoiceUrl
+				record.MsgType = "VoiceMsg"
+			case SendTypeVoiceByUrlContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "VoiceMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["VoiceUrl"] = content.VoiceUrl
+				sendJsonPack["GroupID"] = content.Group
+				record.MsgType = "VoiceMsg"
+			case SendTypeVoiceByLocalContent:
+				sendJsonPack["SendMsgType"] = "VoiceMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["VoiceUrl"] = content.Path
+				record.MsgType = "VoiceMsg"
+			case SendTypeVoiceByLocalContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "VoiceMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["VoiceUrl"] = content.Path
+				sendJsonPack["GroupID"] = content.Group
+				record.MsgType = "VoiceMsg"
+			case SendTypeXmlContent:
+				sendJsonPack["SendMsgType"] = "XmlMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+				record.Content = content.Content
+				record.MsgType = "XmlMsg"
+			case SendTypeXmlContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "XmlMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["GroupID"] = content.Group
+				record.Content = content.Content
+				record.MsgType = "XmlMsg"
+			case SendTypeJsonContent:
+				sendJsonPack["SendMsgType"] = "JsonMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+			case SendTypeJsonContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "JsonMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["GroupID"] = content.Group
+				record.Content = content.Content
+				record.MsgType = "JsonMsg"
+			case SendTypeForwordContent:
+				sendJsonPack["SendMsgType"] = "ForwordMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["ForwordBuf"] = content.ForwordBuf
+				sendJsonPack["ForwordField"] = content.ForwordField
+				record.MsgType = "ForwordMsg"
+			case SendTypeForwordContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "ForwordMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["ForwordBuf"] = content.ForwordBuf
+				sendJsonPack["ForwordField"] = content.ForwordField
+				sendJsonPack["GroupID"] = content.Group
+				record.MsgType = "ForwordMsg"
 
-		case SendTypeTextMsgContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "TextMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["GroupID"] = content.Group
-			record.Content = content.Content
-			record.MsgType = "TextMsg"
-		case SendTypePicMsgByUrlContent:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicUrl"] = content.PicUrl
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["FlashPic"] = content.Flash
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		case SendTypePicMsgByUrlContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicUrl"] = content.PicUrl
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["FlashPic"] = content.Flash
-			sendJsonPack["GroupID"] = content.Group
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		case SendTypePicMsgByLocalContent:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicPath"] = content.Path
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["FlashPic"] = content.Flash
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		case SendTypePicMsgByLocalContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicPath"] = content.Path
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["FlashPic"] = content.Flash
-			sendJsonPack["GroupID"] = content.Group
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		case SendTypePicMsgByMd5Content:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicMd5s"] = content.Md5
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["FlashPic"] = content.Flash
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		case SendTypeVoiceByUrlContent:
-			sendJsonPack["SendMsgType"] = "VoiceMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["VoiceUrl"] = content.VoiceUrl
-			record.MsgType = "VoiceMsg"
-		case SendTypeVoiceByUrlContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "VoiceMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["VoiceUrl"] = content.VoiceUrl
-			sendJsonPack["GroupID"] = content.Group
-			record.MsgType = "VoiceMsg"
-		case SendTypeVoiceByLocalContent:
-			sendJsonPack["SendMsgType"] = "VoiceMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["VoiceUrl"] = content.Path
-			record.MsgType = "VoiceMsg"
-		case SendTypeVoiceByLocalContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "VoiceMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["VoiceUrl"] = content.Path
-			sendJsonPack["GroupID"] = content.Group
-			record.MsgType = "VoiceMsg"
-		case SendTypeXmlContent:
-			sendJsonPack["SendMsgType"] = "XmlMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["Content"] = content.Content
-			record.Content = content.Content
-			record.MsgType = "XmlMsg"
-		case SendTypeXmlContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "XmlMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["GroupID"] = content.Group
-			record.Content = content.Content
-			record.MsgType = "XmlMsg"
-		case SendTypeJsonContent:
-			sendJsonPack["SendMsgType"] = "JsonMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["Content"] = content.Content
-		case SendTypeJsonContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "JsonMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["GroupID"] = content.Group
-			record.Content = content.Content
-			record.MsgType = "JsonMsg"
-		case SendTypeForwordContent:
-			sendJsonPack["SendMsgType"] = "ForwordMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["ForwordBuf"] = content.ForwordBuf
-			sendJsonPack["ForwordField"] = content.ForwordField
-			record.MsgType = "ForwordMsg"
-		case SendTypeForwordContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "ForwordMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["ForwordBuf"] = content.ForwordBuf
-			sendJsonPack["ForwordField"] = content.ForwordField
-			sendJsonPack["GroupID"] = content.Group
-			record.MsgType = "ForwordMsg"
-
-		case SendTypeRelayContent:
-			sendJsonPack["ReplayInfo"] = content.ReplayInfo
-			record.MsgType = "ReplayMsg"
-		case SendTypeRelayContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "ReplayMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["ReplayInfo"] = content.ReplayInfo
-			sendJsonPack["GroupID"] = content.Group
-			record.MsgType = "ReplayMsg"
-		case SendTypePicMsgByBase64Content:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicBase64Buf"] = content.Base64
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["FlashPic"] = content.Flash
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		case SendTypePicMsgByBase64ContentPrivateChat:
-			sendJsonPack["SendMsgType"] = "PicMsg"
-			sendJsonPack["SendToType"] = sendMsgPack.SendToType
-			sendJsonPack["PicBase64Buf"] = content.Base64
-			sendJsonPack["Content"] = content.Content
-			sendJsonPack["GroupID"] = content.Group
-			sendJsonPack["FlashPic"] = content.Flash
-			record.Content = content.Content
-			record.MsgType = "PicMsg"
-		default:
-			log.Println("未知发送的类型")
-			continue OuterLoop
-		}
-		for i := 2; i >= 0; i-- {
-			for _, v := range b.middleware {
-				if len(sendJsonPack) == 0 {
-					break
-				}
-				if v.priority == i {
-					sendJsonPack = v.fun(sendJsonPack)
-					//v.fun.Call([]reflect.Value{reflect.ValueOf(sendJsonPack)})
-				}
-				r, ok := sendJsonPack["reason"].(string)
-				if len(sendJsonPack) == 1 && ok {
-					if r != "" {
-						log.Println("消息被拦截！拦截原因 " + r)
-					} else {
-						log.Println("消息被拦截！无拦截原因")
+			case SendTypeRelayContent:
+				sendJsonPack["ReplayInfo"] = content.ReplayInfo
+				record.MsgType = "ReplayMsg"
+			case SendTypeRelayContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "ReplayMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["ReplayInfo"] = content.ReplayInfo
+				sendJsonPack["GroupID"] = content.Group
+				record.MsgType = "ReplayMsg"
+			case SendTypePicMsgByBase64Content:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicBase64Buf"] = content.Base64
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["FlashPic"] = content.Flash
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			case SendTypePicMsgByBase64ContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "PicMsg"
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["PicBase64Buf"] = content.Base64
+				sendJsonPack["Content"] = content.Content
+				sendJsonPack["GroupID"] = content.Group
+				sendJsonPack["FlashPic"] = content.Flash
+				record.Content = content.Content
+				record.MsgType = "PicMsg"
+			default:
+				log.Println("未知发送的类型")
+				continue OuterLoop
+			}
+			for i := 2; i >= 0; i-- {
+				for _, v := range b.middleware {
+					if len(sendJsonPack) == 0 {
+						break
 					}
-					continue OuterLoop
+					if v.priority == i {
+						sendJsonPack = v.fun(sendJsonPack)
+						//v.fun.Call([]reflect.Value{reflect.ValueOf(sendJsonPack)})
+					}
+					r, ok := sendJsonPack["reason"].(string)
+					if len(sendJsonPack) == 1 && ok {
+						if r != "" {
+							log.Println("消息被拦截！拦截原因 " + r)
+						} else {
+							log.Println("消息被拦截！无拦截原因")
+						}
+						continue OuterLoop
+					}
 				}
 			}
-		}
 
-		//tmp, _ := json.Marshal(sendJsonPack)
-		//log.Println(string(tmp))
-		res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		var result Result
-		err = res.Json(&result)
-		if err != nil {
-			log.Println("发送失败！ ", err.Error())
-			continue
-		}
-		reg1, _ := regexp.Compile(`\[([0-9]{1,5})\]`)
-		id := reg1.FindStringSubmatch(record.Content)
-		if sendMsgPack.CallbackFunc != nil {
-			go func() {
-				ch := make(chan MyRecord, 1)
-				stop := make(chan bool, 1)
+			//tmp, _ := json.Marshal(sendJsonPack)
+			//log.Println(string(tmp))
+			res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
+			if err != nil {
+				log.Println(err.Error())
+				continue
+			}
+			var result Result
+			err = res.Json(&result)
+			if err != nil {
+				log.Println("发送失败！ ", err.Error())
+				continue
+			}
+			reg1, _ := regexp.Compile(`\[([0-9]{1,5})\]`)
+			id := reg1.FindStringSubmatch(record.Content)
+			if sendMsgPack.CallbackFunc != nil {
 				go func() {
-					if sendMsgPack.SendToType == SendToTypeFriend || len(id) <= 1 {
-						ch <- MyRecord{}
-						return
-					}
-
-					for {
-						select {
-						case <-stop:
+					ch := make(chan MyRecord, 1)
+					stop := make(chan bool, 1)
+					go func() {
+						if sendMsgPack.SendToType == SendToTypeFriend || len(id) <= 1 {
+							ch <- MyRecord{}
 							return
-						default:
-							b.myRecordLocker.Lock()
-							if v, ok := b.myRecord[id[1]]; ok {
-								ch <- v
-
-								delete(b.myRecord, id[1])
-
-							}
-							b.myRecordLocker.Unlock()
 						}
 
+						for {
+							select {
+							case <-stop:
+								return
+							default:
+								b.myRecordLocker.Lock()
+								if v, ok := b.myRecord[id[1]]; ok {
+									ch <- v
+
+									delete(b.myRecord, id[1])
+
+								}
+								b.myRecordLocker.Unlock()
+							}
+
+						}
+					}()
+					select {
+					case myRecordPack := <-ch:
+						sendMsgPack.CallbackFunc(result.Ret, result.Msg, myRecordPack)
+						stop <- true
+
+					case <-time.After(2 * time.Second):
+						sendMsgPack.CallbackFunc(result.Ret, result.Msg, MyRecord{})
+						stop <- true
 					}
+
 				}()
-				select {
-				case myRecordPack := <-ch:
-					sendMsgPack.CallbackFunc(result.Ret, result.Msg, myRecordPack)
-					stop <- true
-
-				case <-time.After(2 * time.Second):
-					sendMsgPack.CallbackFunc(result.Ret, result.Msg, MyRecord{})
-					stop <- true
-				}
-
-			}()
+			}
+			time.Sleep(time.Duration(b.delayed) * time.Millisecond)
 		}
-		time.Sleep(time.Duration(b.delayed) * time.Millisecond)
+
 	}
+
 }

@@ -22,6 +22,7 @@ func main() {
 	opqBot := OPQBot.NewBotManager(2629326992, os.Args[1])
 	// 设置发送队列每次发送的间隔时间 默认1000ms
 	opqBot.SetSendDelayed(1000)
+	opqBot.SetMaxRetryCount(5)
 	err := opqBot.Start()
 	if err != nil {
 		log.Println(err.Error())
@@ -281,7 +282,7 @@ func main() {
 	//	ToUserUid:  2435932516,
 	//	Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "你好", PicUrl: "https://img-home.csdnimg.cn/images/20201124032511.png"},
 	//})
-	time.Sleep(24 * time.Hour)
+	opqBot.Wait()
 }
 func VerifyBlackList(botQQ int64, packet OPQBot.GroupMsgPack) {
 	if packet.FromUserID == 123123123 {
