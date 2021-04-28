@@ -7,12 +7,12 @@ import (
 )
 
 type Session interface {
-	Set(key, value interface{}) error
-	Get(key interface{}) interface{}
-	GetString(key interface{}) string
-	GetInt(key interface{}) int
-	Delete(key interface{}) error
-	QQ() int64
+	Set(key, value interface{}) error // 设置
+	Get(key interface{}) interface{}  // 获取Value
+	GetString(key interface{}) string // 获取Value (String)
+	GetInt(key interface{}) int       // 获取Value (Int)
+	Delete(key interface{}) error     // 删除Key
+	QQ() int64                        // 获取当前Session的QQ
 }
 
 type Provider interface {

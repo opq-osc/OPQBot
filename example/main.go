@@ -22,6 +22,7 @@ func main() {
 	opqBot := OPQBot.NewBotManager(2629326992, os.Args[1])
 	// 设置发送队列每次发送的间隔时间 默认1000ms
 	opqBot.SetSendDelayed(1000)
+	// 设置最大重试次数
 	opqBot.SetMaxRetryCount(5)
 	err := opqBot.Start()
 	if err != nil {
@@ -46,7 +47,6 @@ func main() {
 				})
 			}
 			s.Set("last", packet.Content)
-
 			if packet.Content == "#上传测试" {
 				//b,_ := ioutil.ReadFile("./1.mp3")base64.StdEncoding.EncodeToString(b)
 				log.Println(opqBot.UploadFileWithBase64("1.mp3", "MTIzMTIzMTIzMjEz", packet.FromGroupID, true))
