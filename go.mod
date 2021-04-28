@@ -7,7 +7,3 @@ require (
 	github.com/goinggo/mapstructure v0.0.0-20140717182941-194205d9b4a9
 	github.com/gorilla/websocket v1.4.2 // indirect
 )
-
-
-// 废除错误发布的版本
-retract v0.0.7
