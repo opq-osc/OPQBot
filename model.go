@@ -1,6 +1,8 @@
 package OPQBot
 
-import "reflect"
+import (
+	"reflect"
+)
 
 const (
 	SendToTypeFriend               = 1

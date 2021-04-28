@@ -10,6 +10,8 @@ import (
 	"github.com/goinggo/mapstructure"
 	gosocketio "github.com/mcoo/OPQBot/golang-socketio-edit"
 	"github.com/mcoo/OPQBot/golang-socketio-edit/transport"
+	"github.com/mcoo/OPQBot/session"
+	_ "github.com/mcoo/OPQBot/session/provider"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -38,6 +40,7 @@ type BotManager struct {
 	middleware     []middleware
 	delayed        int
 	locker         sync.RWMutex
+	Session        *session.Manager
 }
 
 type middleware struct {
@@ -129,7 +132,12 @@ func VoiceSilkToMp3(base64EncodedSilk string) ([]byte, error) {
 }
 
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
-	return BotManager{Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	s, err := session.NewManager("qq", 3600)
+	if err != nil {
+		panic(err)
+	}
+	go s.GC()
+	return BotManager{Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 }
 
 // SetSendDelayed 设置发送消息的时延 单位毫秒 默认1000
@@ -250,6 +258,7 @@ func (b *BotManager) Start() error {
 			result.f = f
 			result.NowIndex = 0
 			result.MaxIndex = len(f) - 1
+
 			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
 		}
 		//log.Println(args)

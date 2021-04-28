@@ -22,6 +22,7 @@ func main() {
 	opqBot := OPQBot.NewBotManager(2629326992, os.Args[1])
 	// 设置发送队列每次发送的间隔时间 默认1000ms
 	opqBot.SetSendDelayed(1000)
+	// 设置最大重试次数
 	opqBot.SetMaxRetryCount(5)
 	err := opqBot.Start()
 	if err != nil {
@@ -36,6 +37,16 @@ func main() {
 	//}))
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
+			s := opqBot.Session.SessionStart(packet.FromUserID)
+			last := s.GetString("last")
+			if last != "" {
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "你上次发言为" + last},
+				})
+			}
+			s.Set("last", packet.Content)
 			if packet.Content == "#上传测试" {
 				//b,_ := ioutil.ReadFile("./1.mp3")base64.StdEncoding.EncodeToString(b)
 				log.Println(opqBot.UploadFileWithBase64("1.mp3", "MTIzMTIzMTIzMjEz", packet.FromGroupID, true))
@@ -129,7 +140,7 @@ func main() {
 				_ = res.Json(&pixivPic)
 				opqBot.Send(OPQBot.SendMsgPack{
 					SendToType: OPQBot.SendToTypeGroup,
-					ToUserUid:  int64(packet.FromGroupID),
+					ToUserUid:  packet.FromGroupID,
 					Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "随机", PicUrl: pixivPic.Imgurl},
 					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
 						if Code == 0 {
