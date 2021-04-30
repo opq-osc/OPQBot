@@ -38,7 +38,7 @@ func main() {
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			s := opqBot.Session.SessionStart(packet.FromUserID)
-			last := s.GetString("last")
+			last, _ := s.GetString("last")
 			if last != "" {
 				opqBot.Send(OPQBot.SendMsgPack{
 					SendToType: OPQBot.SendToTypeGroup,

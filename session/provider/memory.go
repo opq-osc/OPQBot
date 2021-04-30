@@ -2,6 +2,7 @@ package provider
 
 import (
 	"container/list"
+	"errors"
 	"github.com/mcoo/OPQBot/session"
 	"sync"
 	"time"
@@ -21,36 +22,46 @@ func (st *SessionStore) Set(key, value interface{}) error {
 	return nil
 }
 
-func (st *SessionStore) Get(key interface{}) interface{} {
-	pder.SessionUpdate(st.qq)
-	if v, ok := st.value[key]; ok {
-		return v
-	} else {
-		return nil
+func (st *SessionStore) Get(key interface{}) (interface{}, error) {
+	err := pder.SessionUpdate(st.qq)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	if v, ok := st.value[key]; ok {
+		return v, nil
+	} else {
+		return nil, errors.New("key不存在")
+	}
 }
-func (st *SessionStore) GetString(key interface{}) string {
-	pder.SessionUpdate(st.qq)
+func (st *SessionStore) GetString(key interface{}) (string, error) {
+	err := pder.SessionUpdate(st.qq)
+	if err != nil {
+		return "", err
+	}
 	if v, ok := st.value[key]; ok {
 		if v1, ok := v.(string); ok {
-			return v1
+			return v1, nil
+		} else {
+			return "", errors.New("类型转换失败")
 		}
 	} else {
-		return ""
+		return "", errors.New("key不存在")
 	}
-	return ""
 }
-func (st *SessionStore) GetInt(key interface{}) int {
-	pder.SessionUpdate(st.qq)
+func (st *SessionStore) GetInt(key interface{}) (int, error) {
+	err := pder.SessionUpdate(st.qq)
+	if err != nil {
+		return -1, err
+	}
 	if v, ok := st.value[key]; ok {
 		if v1, ok := v.(int); ok {
-			return v1
+			return v1, nil
+		} else {
+			return -1, errors.New("类型转换失败")
 		}
 	} else {
-		return -1
+		return -1, errors.New("key不存在")
 	}
-	return -1
 }
 
 func (st *SessionStore) Delete(key interface{}) error {
@@ -86,7 +97,6 @@ func (pder *Provider) SessionRead(qq int64) (session.Session, error) {
 		sess, err := pder.SessionInit(qq)
 		return sess, err
 	}
-	return nil, nil
 }
 
 func (pder *Provider) SessionDestroy(qq int64) error {
