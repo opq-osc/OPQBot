@@ -6,12 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/asmcos/requests"
 	"github.com/goinggo/mapstructure"
 	gosocketio "github.com/mcoo/OPQBot/golang-socketio-edit"
 	"github.com/mcoo/OPQBot/golang-socketio-edit/transport"
 	"github.com/mcoo/OPQBot/session"
 	_ "github.com/mcoo/OPQBot/session/provider"
+	"github.com/mcoo/requests"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -626,7 +626,21 @@ func (b *BotManager) GetUserInfo(qq int64) (UserInfo, error) {
 		// log.Println(err.Error())
 		return result, err
 	}
-	log.Println(res.Text())
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// GetUserCookie 获取QQ相关ck
+func (b *BotManager) GetUserCookie() (Cookie, error) {
+	var result Cookie
+	res, err := requests.Get(b.OPQUrl + "/v1/LuaApiCaller?funcname=GetUserCook&qq=" + strconv.FormatInt(b.QQ, 10))
+	if err != nil {
+		// log.Println(err.Error())
+		return result, err
+	}
 	err = res.Json(&result)
 	if err != nil {
 		return result, err

@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/asmcos/requests"
 	"github.com/mcoo/OPQBot"
+	"github.com/mcoo/OPQBot/qzone"
+	"github.com/mcoo/requests"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,17 +36,34 @@ func main() {
 	//	m = map[string]interface{}{"reason": "消息违规"}
 	//	return m
 	//}))
+	ck, _ := opqBot.GetUserCookie()
+	qz := qzone.NewQzoneManager(opqBot.QQ, ck)
+	f, _ := ioutil.ReadFile("./head.PNG")
+	u, _ := qz.UploadPic(base64.StdEncoding.EncodeToString(f))
+	bo, rich, _ := qzone.GetPicBoAndRichVal(u)
+	log.Println(qz.SendShuoShuoWithPic("发送图文测试", bo, rich))
+	//lists,_ :=qz.GetShuoShuoList()
+	//infoReg,_ := regexp.Compile(`<div class="f-info">(.*?)</div>`)
+	//for _,v := range lists.Data.Data {
+	//	if m := infoReg.FindStringSubmatch(v["html"].(string));len(m) == 2 {
+	//		log.Println(m[1])
+	//	}
+	//}
+	//qz.SendShuoShuo("发送文字测试")
+	//log.Println(infoReg.FindStringSubmatch(lists.Data.Data[0]["html"].(string))[1])
+
+	//log.Println(ck.PSkey.Qzone)
 	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			s := opqBot.Session.SessionStart(packet.FromUserID)
-			last, _ := s.GetString("last")
-			if last != "" {
-				opqBot.Send(OPQBot.SendMsgPack{
-					SendToType: OPQBot.SendToTypeGroup,
-					ToUserUid:  packet.FromGroupID,
-					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "你上次发言为" + last},
-				})
-			}
+			//last, _ := s.GetString("last")
+			//if last != "" {
+			//	opqBot.Send(OPQBot.SendMsgPack{
+			//		SendToType: OPQBot.SendToTypeGroup,
+			//		ToUserUid:  packet.FromGroupID,
+			//		Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "你上次发言为" + last},
+			//	})
+			//}
 			s.Set("last", packet.Content)
 			if packet.Content == "#上传测试" {
 				//b,_ := ioutil.ReadFile("./1.mp3")base64.StdEncoding.EncodeToString(b)
