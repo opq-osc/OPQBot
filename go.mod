@@ -8,6 +8,3 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/mcoo/requests v0.0.1-edited
 )
-
-// 废除错误发布的版本
-retract v0.0.7
