@@ -436,3 +436,33 @@ type UserInfo struct {
 	Message string `json:"message"`
 	Subcode int    `json:"subcode"`
 }
+
+type Cookie struct {
+	ClientKey string `json:"ClientKey"`
+	Cookies   string `json:"Cookies"`
+	Gtk       string `json:"Gtk"`
+	Gtk32     string `json:"Gtk32"`
+	PSkey     struct {
+		Connect     string `json:"connect"`
+		Docs        string `json:"docs"`
+		Docx        string `json:"docx"`
+		Game        string `json:"game"`
+		Gamecenter  string `json:"gamecenter"`
+		Imgcache    string `json:"imgcache"`
+		MTencentCom string `json:"m.tencent.com"`
+		Mail        string `json:"mail"`
+		Mma         string `json:"mma"`
+		Now         string `json:"now"`
+		Office      string `json:"office"`
+		Openmobile  string `json:"openmobile"`
+		Qqweb       string `json:"qqweb"`
+		Qun         string `json:"qun"`
+		Qzone       string `json:"qzone"`
+		QzoneCom    string `json:"qzone.com"`
+		TenpayCom   string `json:"tenpay.com"`
+		Ti          string `json:"ti"`
+		Vip         string `json:"vip"`
+		Weishi      string `json:"weishi"`
+	} `json:"PSkey"`
+	Skey string `json:"Skey"`
+}
