@@ -53,7 +53,7 @@ func main() {
 	//log.Println(infoReg.FindStringSubmatch(lists.Data.Data[0]["html"].(string))[1])
 
 	//log.Println(ck.PSkey.Qzone)
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet OPQBot.GroupMsgPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet *OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			s := opqBot.Session.SessionStart(packet.FromUserID)
 			//last, _ := s.GetString("last")
@@ -190,7 +190,7 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet OPQBot.FriendMsgPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet *OPQBot.FriendMsgPack) {
 		if packet.Content == "赞我" {
 			i, ok := ZanNote[packet.FromUin]
 			if ok {
@@ -260,7 +260,7 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupShut, func(botQQ int64, packet OPQBot.GroupShutPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupShut, func(botQQ int64, packet *OPQBot.GroupShutPack) {
 		log.Println(botQQ, packet)
 	})
 	if err != nil {
@@ -281,25 +281,25 @@ func main() {
 	err = opqBot.AddEvent(OPQBot.EventNameOnOther, func(botQQ int64, e interface{}) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupSystemNotify, func(botQQ int64, e OPQBot.GroupSystemNotifyPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupSystemNotify, func(botQQ int64, e *OPQBot.GroupSystemNotifyPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupRevoke, func(botQQ int64, e OPQBot.GroupRevokePack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupRevoke, func(botQQ int64, e *OPQBot.GroupRevokePack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupJoin, func(botQQ int64, e OPQBot.GroupJoinPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupJoin, func(botQQ int64, e *OPQBot.GroupJoinPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdmin, func(botQQ int64, e OPQBot.GroupAdminPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdmin, func(botQQ int64, e *OPQBot.GroupAdminPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExit, func(botQQ int64, e OPQBot.GroupExitPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExit, func(botQQ int64, e *OPQBot.GroupExitPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExitSuccess, func(botQQ int64, e OPQBot.GroupExitSuccessPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExitSuccess, func(botQQ int64, e *OPQBot.GroupExitSuccessPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdminSysNotify, func(botQQ int64, e OPQBot.GroupAdminSysNotifyPack) {
+	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdminSysNotify, func(botQQ int64, e *OPQBot.GroupAdminSysNotifyPack) {
 		log.Println(e)
 	})
 	if err != nil {
@@ -313,7 +313,7 @@ func main() {
 	//})
 	opqBot.Wait()
 }
-func VerifyBlackList(botQQ int64, packet OPQBot.GroupMsgPack) {
+func VerifyBlackList(botQQ int64, packet *OPQBot.GroupMsgPack) {
 	if packet.FromUserID == 123123123 {
 		log.Println("触发黑名单")
 		return

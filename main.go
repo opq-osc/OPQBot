@@ -259,7 +259,7 @@ func (b *BotManager) Start() error {
 			result.NowIndex = 0
 			result.MaxIndex = len(f) - 1
 
-			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 		}
 		//log.Println(args)
 	})
@@ -872,25 +872,25 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 		var okStruck string
 		switch EventName {
 		case EventNameOnFriendMessage:
-			okStruck = "OPQBot.FriendMsgPack"
+			okStruck = "*OPQBot.FriendMsgPack"
 		case EventNameOnGroupMessage:
-			okStruck = "OPQBot.GroupMsgPack"
+			okStruck = "*OPQBot.GroupMsgPack"
 		case EventNameOnGroupJoin:
-			okStruck = "OPQBot.GroupJoinPack"
+			okStruck = "*OPQBot.GroupJoinPack"
 		case EventNameOnGroupAdmin:
-			okStruck = "OPQBot.GroupAdminPack"
+			okStruck = "*OPQBot.GroupAdminPack"
 		case EventNameOnGroupExit:
-			okStruck = "OPQBot.GroupExitPack"
+			okStruck = "*OPQBot.GroupExitPack"
 		case EventNameOnGroupExitSuccess:
-			okStruck = "OPQBot.GroupExitSuccessPack"
+			okStruck = "*OPQBot.GroupExitSuccessPack"
 		case EventNameOnGroupAdminSysNotify:
-			okStruck = "OPQBot.GroupAdminSysNotifyPack"
+			okStruck = "*OPQBot.GroupAdminSysNotifyPack"
 		case EventNameOnGroupRevoke:
-			okStruck = "OPQBot.GroupRevokePack"
+			okStruck = "*OPQBot.GroupRevokePack"
 		case EventNameOnGroupShut:
-			okStruck = "OPQBot.GroupShutPack"
+			okStruck = "*OPQBot.GroupShutPack"
 		case EventNameOnGroupSystemNotify:
-			okStruck = "OPQBot.GroupSystemNotifyPack"
+			okStruck = "*OPQBot.GroupSystemNotifyPack"
 		case EventNameOnDisconnected:
 			okStruck = "ok"
 		case EventNameOnConnected:
@@ -906,7 +906,7 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 			continue
 		}
 		if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
-			return errors.New(EventName + ": FuncError, Your Function " + fVal.Type().Name() + " Should Have " + okStruck)
+			return errors.New(EventName + ": FuncError, Your Function  Should Have " + okStruck + " Your Struct is " + fVal.Type().In(1).String())
 		}
 
 		events = append(events, fVal)
