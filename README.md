@@ -17,50 +17,8 @@
 ### 安装 💡
 ` github.com/mcoo/OPQBot@latest`
 [使用教程](https://mcenjoy.cn/330/)
-### 例子 👆
-```golang
-package main
 
-import (
-	"github.com/mcoo/OPQBot"
-	"log"
-	"time"
-)
-func main()  {
-	opqBot := OPQBot.NewBotManager(2629326992,"http://192.168.2.2:8899")
-	err := opqBot.Start()
-	if err != nil {
-		log.Println(err.Error())
-	}
-	defer opqBot.Stop()
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, func(botQQ int64, packet OPQBot.GroupMsgPack) {
-		log.Println(botQQ,packet)
-	})
-	if err != nil {
-		log.Println(err.Error())
-	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet OPQBot.FriendMsgPack) {
-		log.Println(botQQ,packet)
-	})
-	if err != nil {
-		log.Println(err.Error())
-	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupShut, func(botQQ int64, packet OPQBot.GroupShutPack) {
-		log.Println(botQQ,packet)
-	})
-	if err != nil {
-		log.Println(err.Error())
-	}
-	opqBot.Send(OPQBot.SendMsgPack{
-		SendToType: OPQBot.SendToTypeFriend,
-		ToUserUid:  2435932516,
-		Content:    OPQBot.SendTypePicMsgByUrlContent{Content: "你好", PicUrl: "https://img-home.csdnimg.cn/images/20201124032511.png"},
-	})
-	time.Sleep(1*time.Hour) // 可以用WaitGroup替代
-}
-```
-
-更多请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
+请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
 
 以example文件为准 [example](https://github.com/opq-osc/OPQBot/blob/main/example/main.go)
 
@@ -77,4 +35,5 @@ func main()  {
 20210424    添加事件的中间件，向下兼容以前的代码，使用看example，完善silk功能
 20210427    修复SocketIO数据畸形的问题，添加群上传功能
 20210428    添加内置session 相关内容看Wiki
+20210512    packet现在修改为传递指针，请注意
 ```
