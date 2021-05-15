@@ -665,6 +665,20 @@ func (b *BotManager) KickGroupMember(groupID, userId int64) error {
 	return nil
 }
 
+// GetGroupMemberList 获取群成员列表
+func (b *BotManager) GetGroupMemberList(groupID, LastUin int64) (GroupMemberList, error) {
+	var result GroupMemberList
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopMemberListReq&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "LastUin": LastUin})
+	if err != nil {
+		return result, err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 // SetGroupNewNick 设置群名片
 func (b *BotManager) SetGroupNewNick(newNick string, groupID, userId int64) error {
 	var result Result
@@ -713,7 +727,7 @@ func (b *BotManager) GetFriendList(startIndex int) (FriendList, error) {
 	return result, nil
 }
 
-// GetGroupList 获取好友列表
+// GetGroupList 获取群列表
 func (b *BotManager) GetGroupList(nextToken string) (GroupList, error) {
 	var result GroupList
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopListReqV2&timeout=10&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"NextToken": nextToken})

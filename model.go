@@ -380,6 +380,30 @@ type GroupFileResult struct {
 	Ret int    `json:"Ret"`
 	URL string `json:"Url"`
 }
+type GroupMemberList struct {
+	Count      int `json:"Count"`
+	GroupUin   int `json:"GroupUin"`
+	LastUin    int `json:"LastUin"`
+	MemberList []struct {
+		Age           int    `json:"Age"`
+		AutoRemark    string `json:"AutoRemark"`
+		CreditLevel   int    `json:"CreditLevel"`
+		Email         string `json:"Email"`
+		FaceID        int    `json:"FaceId"`
+		Gender        int    `json:"Gender"`
+		GroupAdmin    int    `json:"GroupAdmin"`
+		GroupCard     string `json:"GroupCard"`
+		JoinTime      int    `json:"JoinTime"`
+		LastSpeakTime int    `json:"LastSpeakTime"`
+		MemberLevel   int    `json:"MemberLevel"`
+		MemberUin     int    `json:"MemberUin"`
+		Memo          string `json:"Memo"`
+		NickName      string `json:"NickName"`
+		ShowName      string `json:"ShowName"`
+		SpecialTitle  string `json:"SpecialTitle"`
+		Status        int    `json:"Status"`
+	} `json:"MemberList"`
+}
 
 // FriendList 获取好友列表表单
 type FriendList struct {
