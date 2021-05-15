@@ -668,7 +668,7 @@ func (b *BotManager) KickGroupMember(groupID, userId int64) error {
 // GetGroupMemberList 获取群成员列表
 func (b *BotManager) GetGroupMemberList(groupID, LastUin int64) (GroupMemberList, error) {
 	var result GroupMemberList
-	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopMemberListReq&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupID": groupID, "LastUin": LastUin})
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopMemberListReq&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupUin": groupID, "LastUin": LastUin})
 	if err != nil {
 		return result, err
 	}
