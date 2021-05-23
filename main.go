@@ -6,12 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/goinggo/mapstructure"
-	gosocketio "github.com/mcoo/OPQBot/golang-socketio-edit"
-	"github.com/mcoo/OPQBot/golang-socketio-edit/transport"
-	"github.com/mcoo/OPQBot/session"
-	_ "github.com/mcoo/OPQBot/session/provider"
-	"github.com/mcoo/requests"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -24,6 +18,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/goinggo/mapstructure"
+	gosocketio "github.com/mcoo/OPQBot/golang-socketio-edit"
+	"github.com/mcoo/OPQBot/golang-socketio-edit/transport"
+	"github.com/mcoo/OPQBot/session"
+	_ "github.com/mcoo/OPQBot/session/provider"
+	"github.com/mcoo/requests"
 )
 
 type BotManager struct {
@@ -154,13 +155,13 @@ func (b *BotManager) Start() error {
 	signal.Notify(interrupt, os.Interrupt, os.Kill)
 	go func() {
 		select {
-		case _ = <-interrupt:
+		case <-interrupt:
 			log.Println("程序被用户终止,正在进行释放资源操作!")
 			b.MaxRetryCount = 0
 			b.Done <- 1
 			b.Done <- 2
 			b.wg.Done()
-		case _ = <-restart:
+		case <-restart:
 			log.Println("程序重连尝试!")
 			b.Done <- 1
 			b.Done <- 2
@@ -180,7 +181,7 @@ func (b *BotManager) Start() error {
 					if len(b.myRecord) > 50 {
 						b.myRecordLocker.Lock()
 						for i, v := range b.myRecord {
-							if time.Now().Sub(time.Unix(int64(v.MsgTime), 0)) > time.Second*180 {
+							if time.Since(time.Unix(int64(v.MsgTime), 0)) > time.Second*180 {
 								delete(b.myRecord, i)
 							}
 						}
@@ -665,6 +666,20 @@ func (b *BotManager) KickGroupMember(groupID, userId int64) error {
 	return nil
 }
 
+// GetGroupMemberList 获取群成员列表
+func (b *BotManager) GetGroupMemberList(groupID, LastUin int64) (GroupMemberList, error) {
+	var result GroupMemberList
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopMemberListReq&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"GroupUin": groupID, "LastUin": LastUin})
+	if err != nil {
+		return result, err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 // SetGroupNewNick 设置群名片
 func (b *BotManager) SetGroupNewNick(newNick string, groupID, userId int64) error {
 	var result Result
@@ -713,7 +728,7 @@ func (b *BotManager) GetFriendList(startIndex int) (FriendList, error) {
 	return result, nil
 }
 
-// GetGroupList 获取好友列表
+// GetGroupList 获取群列表
 func (b *BotManager) GetGroupList(nextToken string) (GroupList, error) {
 	var result GroupList
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=friendlist.GetTroopListReqV2&timeout=10&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"NextToken": nextToken})
@@ -1184,7 +1199,75 @@ OuterLoop:
 			}
 			time.Sleep(time.Duration(b.delayed) * time.Millisecond)
 		}
-
 	}
+}
 
+// SendFriendTextMsg 发送文字信息给好友
+func (b *BotManager) SendFriendTextMsg(FriendUin int64, Content string) {
+	b.Send(SendMsgPack{
+		SendToType: SendToTypeFriend,
+		ToUserUid:  FriendUin,
+		Content: SendTypeTextMsgContent{
+			Content: Content,
+		},
+	})
+}
+
+// SendFriendPicMsg 发送图片信息给好友
+func (b *BotManager) SendFriendPicMsg(FriendUin int64, Content string, Pic []byte) {
+	b.Send(SendMsgPack{
+		SendToType: SendToTypeFriend,
+		ToUserUid:  FriendUin,
+		Content: SendTypePicMsgByBase64Content{
+			Content: Content,
+			Base64:  base64.StdEncoding.EncodeToString(Pic),
+			Flash:   false,
+		},
+	})
+}
+
+// SendGroupTextMsg 发送文字信息给群
+func (b *BotManager) SendGroupTextMsg(GroupUin int64, Content string) {
+	b.Send(SendMsgPack{
+		SendToType: SendToTypeGroup,
+		ToUserUid:  GroupUin,
+		Content: SendTypeTextMsgContent{
+			Content: Content,
+		},
+	})
+}
+
+// SendGroupPicMsg 发送图片信息给群
+func (b *BotManager) SendGroupPicMsg(GroupUin int64, Content string, Pic []byte) {
+	b.Send(SendMsgPack{
+		SendToType: SendToTypeGroup,
+		ToUserUid:  GroupUin,
+		Content: SendTypePicMsgByBase64Content{
+			Content: Content,
+			Base64:  base64.StdEncoding.EncodeToString(Pic),
+			Flash:   false,
+		},
+	})
+}
+
+// SendGroupJsonMsg 发送JSON信息给群
+func (b *BotManager) SendGroupJsonMsg(GroupUin int64, Content string) {
+	b.Send(SendMsgPack{
+		SendToType: SendToTypeGroup,
+		ToUserUid:  GroupUin,
+		Content: SendTypeJsonContent{
+			Content: Content,
+		},
+	})
+}
+
+// SendGroupXmlMsg 发送Xml信息给群
+func (b *BotManager) SendGroupXmlMsg(GroupUin int64, Content string) {
+	b.Send(SendMsgPack{
+		SendToType: SendToTypeGroup,
+		ToUserUid:  GroupUin,
+		Content: SendTypeXmlContent{
+			Content: Content,
+		},
+	})
 }

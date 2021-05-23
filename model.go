@@ -290,7 +290,7 @@ type GroupAdminSysNotifyPack struct {
 		Flag8           int    `json:"Flag_8"`
 		GroupID         int64  `json:"GroupId"`
 		GroupName       string `json:"GroupName"`
-		ActionUin       int    `json:"ActionUin"`
+		ActionUin       int64  `json:"ActionUin"`
 		ActionName      string `json:"ActionName"`
 		ActionGroupCard string `json:"ActionGroupCard"`
 		Action          int    `json:"Action"`
@@ -373,19 +373,43 @@ type UserCardInfo struct {
 type FriendFileResult struct {
 	FileName string `json:"FileName"`
 	FileSize int    `json:"FileSize"`
-	FromUin  int    `json:"FromUin"`
+	FromUin  int64  `json:"FromUin"`
 	URL      string `json:"Url"`
 }
 type GroupFileResult struct {
 	Ret int    `json:"Ret"`
 	URL string `json:"Url"`
 }
+type GroupMemberList struct {
+	Count      int   `json:"Count"`
+	GroupUin   int64 `json:"GroupUin"`
+	LastUin    int64 `json:"LastUin"`
+	MemberList []struct {
+		Age           int    `json:"Age"`
+		AutoRemark    string `json:"AutoRemark"`
+		CreditLevel   int    `json:"CreditLevel"`
+		Email         string `json:"Email"`
+		FaceID        int    `json:"FaceId"`
+		Gender        int    `json:"Gender"`
+		GroupAdmin    int    `json:"GroupAdmin"`
+		GroupCard     string `json:"GroupCard"`
+		JoinTime      int    `json:"JoinTime"`
+		LastSpeakTime int    `json:"LastSpeakTime"`
+		MemberLevel   int    `json:"MemberLevel"`
+		MemberUin     int64  `json:"MemberUin"`
+		Memo          string `json:"Memo"`
+		NickName      string `json:"NickName"`
+		ShowName      string `json:"ShowName"`
+		SpecialTitle  string `json:"SpecialTitle"`
+		Status        int    `json:"Status"`
+	} `json:"MemberList"`
+}
 
 // FriendList 获取好友列表表单
 type FriendList struct {
 	FriendCount int `json:"Friend_count"`
 	Friendlist  []struct {
-		FriendUin int    `json:"FriendUin"`
+		FriendUin int64  `json:"FriendUin"`
 		IsRemark  bool   `json:"IsRemark"`
 		NickName  string `json:"NickName"`
 		OnlineStr string `json:"OnlineStr"`
@@ -402,8 +426,8 @@ type GroupList struct {
 	Count     int    `json:"Count"`
 	NextToken string `json:"NextToken"`
 	TroopList []struct {
-		GroupID          int    `json:"GroupId"`
-		GroupMemberCount int    `json:"GroupMemberCount"`
+		GroupID          int64  `json:"GroupId"`
+		GroupMemberCount int64  `json:"GroupMemberCount"`
 		GroupName        string `json:"GroupName"`
 		GroupNotice      string `json:"GroupNotice"`
 		GroupOwner       int64  `json:"GroupOwner"`
@@ -433,7 +457,7 @@ type UserInfo struct {
 		Qzone         int    `json:"qzone"`
 		Realname      string `json:"realname"`
 		Smartname     string `json:"smartname"`
-		Uin           int    `json:"uin"`
+		Uin           int64  `json:"uin"`
 	} `json:"data"`
 	Default int    `json:"default"`
 	Message string `json:"message"`

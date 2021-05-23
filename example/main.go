@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/mcoo/OPQBot"
-	"github.com/mcoo/OPQBot/qzone"
 	"github.com/mcoo/requests"
 	"io/ioutil"
 	"log"
@@ -36,12 +35,12 @@ func main() {
 	//	m = map[string]interface{}{"reason": "消息违规"}
 	//	return m
 	//}))
-	ck, _ := opqBot.GetUserCookie()
-	qz := qzone.NewQzoneManager(opqBot.QQ, ck)
-	f, _ := ioutil.ReadFile("./head.PNG")
-	u, _ := qz.UploadPic(base64.StdEncoding.EncodeToString(f))
-	bo, rich, _ := qzone.GetPicBoAndRichVal(u)
-	log.Println(qz.SendShuoShuoWithPic("发送图文测试", bo, rich))
+	//ck, _ := opqBot.GetUserCookie()
+	//qz := qzone.NewQzoneManager(opqBot.QQ, ck)
+	//f, _ := ioutil.ReadFile("./head.PNG")
+	//u, _ := qz.UploadPic(base64.StdEncoding.EncodeToString(f))
+	//bo, rich, _ := qzone.GetPicBoAndRichVal(u)
+	//log.Println(qz.SendShuoShuoWithPic("发送图文测试", bo, rich))
 	//lists,_ :=qz.GetShuoShuoList()
 	//infoReg,_ := regexp.Compile(`<div class="f-info">(.*?)</div>`)
 	//for _,v := range lists.Data.Data {
