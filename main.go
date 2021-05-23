@@ -285,7 +285,7 @@ func (b *BotManager) Start() error {
 			result.f = f
 			result.NowIndex = 0
 			result.MaxIndex = len(f) - 1
-			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 		}
 		//log.Println(args)
 	})
@@ -323,7 +323,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupAdmin:
 			b.locker.RLock()
@@ -340,7 +340,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupExit:
 			b.locker.RLock()
@@ -357,7 +357,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupExitSuccess:
 			b.locker.RLock()
@@ -374,7 +374,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupAdminSysNotify:
 			b.locker.RLock()
@@ -391,7 +391,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupRevoke:
 			b.locker.RLock()
@@ -408,7 +408,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupShut:
 			b.locker.RLock()
@@ -425,7 +425,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		case EventNameOnGroupSystemNotify:
 			b.locker.RLock()
@@ -442,7 +442,7 @@ func (b *BotManager) Start() error {
 				result.f = f
 				result.NowIndex = 0
 				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(result)})
+				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 			}
 		default:
 			b.locker.RLock()
