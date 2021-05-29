@@ -535,9 +535,9 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 // UploadFileWithBase64 上传群文件
 func (b *BotManager) UploadFileWithBase64(FileName, FileBase64 string, ToUserUid int64, Notify bool) error {
 	var result Result
-	js, _ := json.Marshal(map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
+	js, _ := json.Marshal(map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FileBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
 	log.Println(string(js))
-	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FileBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
 	if err != nil {
 		return err
 	}
@@ -554,7 +554,7 @@ func (b *BotManager) UploadFileWithBase64(FileName, FileBase64 string, ToUserUid
 // UploadFileWithFileUrl 上传群文件
 func (b *BotManager) UploadFileWithFileUrl(FileName, FileUrl string, ToUserUid int64, Notify bool) error {
 	var result Result
-	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FlieUrl": FileUrl, "SendMsgType": "UploadGroupFile"})
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FileUrl": FileUrl, "SendMsgType": "UploadGroupFile"})
 	if err != nil {
 		return err
 	}
@@ -571,7 +571,7 @@ func (b *BotManager) UploadFileWithFileUrl(FileName, FileUrl string, ToUserUid i
 // UploadFileWithFilePath 上传群文件
 func (b *BotManager) UploadFileWithFilePath(FilePath string, ToUserUid int64, Notify bool) error {
 	var result Result
-	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FliePath": FilePath, "SendMsgType": "UploadGroupFile"})
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FilePath": FilePath, "SendMsgType": "UploadGroupFile"})
 	if err != nil {
 		return err
 	}
