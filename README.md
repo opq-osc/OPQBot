@@ -16,9 +16,8 @@
 
 ### 安装 💡
 ` github.com/mcoo/OPQBot@latest`
-[使用教程](https://mcenjoy.cn/330/)
 
-请看 [wiki](https://github.com/mcoo/OPQBot/wiki)
+请看 [wiki](https://mcenjoy.cn/opqwiki)
 
 以example文件为准 [example](https://github.com/opq-osc/OPQBot/blob/main/example/main.go)
 
@@ -37,4 +36,5 @@
 20210428    添加内置session 相关内容看Wiki
 20210512    packet现在修改为传递指针，请注意
 20210523    添加快捷发信息的函数
+20210529    修复群文件上传BUG
 ```
