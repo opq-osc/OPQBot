@@ -41,6 +41,7 @@ type BotManager struct {
 	middleware     []middleware
 	delayed        int
 	locker         sync.RWMutex
+	restart        chan int
 	Session        *session.Manager
 }
 
@@ -53,21 +54,37 @@ func (b *BotManager) SetMaxRetryCount(maxRetryCount int) {
 	b.MaxRetryCount = maxRetryCount
 }
 
+var interrupt chan os.Signal
+
+func init() {
+	interrupt = make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, os.Kill)
+}
 func (b *BotManager) Wait() {
+home:
 	b.wg.Wait()
 	if b.MaxRetryCount > 0 {
-		time.Sleep(5 * time.Second)
 		for i := 0; i < b.MaxRetryCount; i++ {
+			log.Println("等待重试,要终止请按下Ctrl+C")
+			select {
+			case <-b.Done:
+
+				b.Running = false
+				log.Println("Bot结束")
+				return
+
+			case <-time.After(5 * time.Second):
+				log.Println("正在重连")
+			}
 			log.Printf("重连尝试第%d/%d次\n", i+1, b.MaxRetryCount)
 			err := b.Start()
 			if err != nil {
 				log.Println(err)
+			} else {
+				goto home
 			}
-			b.wg.Wait()
-			time.Sleep(5 * time.Second)
 		}
 	}
-	//b.onEvent["BotStop"]
 	b.Running = false
 	log.Println("Bot结束")
 }
@@ -138,7 +155,25 @@ func NewBotManager(QQ int64, OPQUrl string) BotManager {
 		panic(err)
 	}
 	go s.GC()
-	return BotManager{Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	b := BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	go func() {
+		for {
+			select {
+			case <-interrupt:
+				log.Println("程序被用户终止,正在进行释放资源操作!")
+				b.MaxRetryCount = 0
+				b.Done <- 0
+				b.Done <- 0
+				b.Done <- 0
+			case <-b.restart:
+				log.Println("程序重连尝试!")
+				b.Done <- 1
+				b.Done <- 2
+			}
+		}
+
+	}()
+	return b
 }
 
 // SetSendDelayed 设置发送消息的时延 单位毫秒 默认1000
@@ -149,26 +184,7 @@ func (b *BotManager) SetSendDelayed(Millisecond int) {
 // Start 开始连接
 func (b *BotManager) Start() error {
 	b.Running = true
-	b.wg.Add(3)
-	interrupt := make(chan os.Signal, 1)
-	restart := make(chan int)
-	signal.Notify(interrupt, os.Interrupt, os.Kill)
-	go func() {
-		select {
-		case <-interrupt:
-			log.Println("程序被用户终止,正在进行释放资源操作!")
-			b.MaxRetryCount = 0
-			b.Done <- 1
-			b.Done <- 2
-			b.wg.Done()
-		case <-restart:
-			log.Println("程序重连尝试!")
-			b.Done <- 1
-			b.Done <- 2
-			b.wg.Done()
-		}
-
-	}()
+	b.wg.Add(2)
 	go b.receiveSendPack()
 	go func() {
 		for {
@@ -176,7 +192,7 @@ func (b *BotManager) Start() error {
 			case <-b.Done:
 				b.wg.Done()
 				return
-			default:
+			case <-time.After(10 * time.Second):
 				go func() {
 					if len(b.myRecord) > 50 {
 						b.myRecordLocker.Lock()
@@ -188,16 +204,12 @@ func (b *BotManager) Start() error {
 						b.myRecordLocker.Unlock()
 					}
 				}()
-				time.Sleep(10 * time.Second)
 			}
-
 		}
-
 	}()
-
 	c, err := gosocketio.Dial(strings.ReplaceAll(b.OPQUrl, "http://", "ws://")+"/socket.io/?EIO=3&transport=websocket", transport.GetDefaultWebsocketTransport())
 	if err != nil {
-		restart <- 1
+		b.restart <- 1
 		return err
 	}
 	err = c.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
@@ -208,7 +220,7 @@ func (b *BotManager) Start() error {
 		}
 	})
 	if err != nil {
-		restart <- 1
+		b.restart <- 1
 		return err
 	}
 	err = c.On(gosocketio.OnDisconnection, func(h *gosocketio.Channel) {
@@ -217,10 +229,10 @@ func (b *BotManager) Start() error {
 		if ok && len(f) >= 1 {
 			f[0].Call([]reflect.Value{})
 		}
-		restart <- 1
+		b.restart <- 1
 	})
 	if err != nil {
-		restart <- 1
+		b.restart <- 1
 		return err
 	}
 	err = c.On("OnGroupMsgs", func(h *gosocketio.Channel, args returnPack) {
@@ -290,7 +302,7 @@ func (b *BotManager) Start() error {
 		//log.Println(args)
 	})
 	if err != nil {
-		restart <- 1
+		b.restart <- 1
 		return err
 	}
 	err = c.On("OnEvents", func(h *gosocketio.Channel, args eventPack) {
@@ -454,7 +466,7 @@ func (b *BotManager) Start() error {
 		}
 	})
 	if err != nil {
-		restart <- 1
+		b.restart <- 1
 		return err
 	}
 	return nil
