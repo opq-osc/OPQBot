@@ -99,9 +99,9 @@ func main() {
 				opqBot.Send(OPQBot.SendMsgPack{
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,
-					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "5s撤回测试！\n" + OPQBot.MacroId()},
+					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "20s撤回测试！\n" + OPQBot.MacroId()},
 					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
-						time.Sleep(5 * time.Second)
+						time.Sleep(20 * time.Second)
 						_ = opqBot.ReCallMsg(record.FromGroupID, record.MsgRandom, record.MsgSeq)
 					},
 				})

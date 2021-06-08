@@ -966,7 +966,9 @@ func (b *BotManager) RegSendMiddleware(priority int, f func(m map[string]interfa
 	b.middleware = append(b.middleware, middle)
 	return nil
 }
+func (b *BotManager) CallFunc(FuncName string, funcstruct interface{}) {
 
+}
 func (b *BotManager) receiveSendPack() {
 	log.Println("QQ发送信息通道开启")
 OuterLoop:
@@ -1188,12 +1190,11 @@ OuterLoop:
 								b.myRecordLocker.Lock()
 								if v, ok := b.myRecord[id[1]]; ok {
 									ch <- v
-
 									delete(b.myRecord, id[1])
-
 								}
 								b.myRecordLocker.Unlock()
 							}
+							time.Sleep(100 * time.Millisecond)
 
 						}
 					}()
