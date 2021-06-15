@@ -17,7 +17,7 @@
 ### 安装 💡
 ` github.com/mcoo/OPQBot@latest`
 
-请看 [wiki](https://mcenjoy.cn/opqwiki)
+请看 [wiki](https://go.opqbot.com)
 
 以example文件为准 [example](https://github.com/opq-osc/OPQBot/blob/main/example/main.go)
 
