@@ -37,7 +37,7 @@ type BotManager struct {
 	wg             sync.WaitGroup
 	myRecord       map[string]MyRecord
 	myRecordLocker sync.RWMutex
-	onEvent        map[string][]reflect.Value
+	onEvent        map[string][][]reflect.Value
 	middleware     []middleware
 	delayed        int
 	locker         sync.RWMutex
@@ -155,7 +155,7 @@ func NewBotManager(QQ int64, OPQUrl string) BotManager {
 		panic(err)
 	}
 	go s.GC()
-	b := BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	b := BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 	go func() {
 		for {
 			select {
@@ -216,7 +216,7 @@ func (b *BotManager) Start() error {
 		// log.Println("连接成功！")
 		f, ok := b.onEvent[EventNameOnConnected]
 		if ok && len(f) >= 1 {
-			f[0].Call([]reflect.Value{})
+			f[0][0].Call([]reflect.Value{})
 		}
 	})
 	if err != nil {
@@ -227,7 +227,7 @@ func (b *BotManager) Start() error {
 		// log.Println("连接断开！")
 		f, ok := b.onEvent[EventNameOnDisconnected]
 		if ok && len(f) >= 1 {
-			f[0].Call([]reflect.Value{})
+			f[0][0].Call([]reflect.Value{})
 		}
 		b.restart <- 1
 	})
@@ -267,12 +267,14 @@ func (b *BotManager) Start() error {
 					b.myRecordLocker.Unlock()
 				}()
 			}
-			result.Bot = b
-			result.f = f
-			result.NowIndex = 0
-			result.MaxIndex = len(f) - 1
+			for _, v := range f {
+				result.Bot = b
+				result.f = v
+				result.NowIndex = 0
+				result.MaxIndex = len(v) - 1
+				v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+			}
 
-			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
 		}
 		//log.Println(args)
 	})
@@ -293,11 +295,13 @@ func (b *BotManager) Start() error {
 				log.Println("解析包错误")
 				return
 			}
-			result.Bot = b
-			result.f = f
-			result.NowIndex = 0
-			result.MaxIndex = len(f) - 1
-			f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+			for _, v := range f {
+				result.Bot = b
+				result.f = v
+				result.NowIndex = 0
+				result.MaxIndex = len(v) - 1
+				v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+			}
 		}
 		//log.Println(args)
 	})
@@ -331,11 +335,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupAdmin:
 			b.locker.RLock()
@@ -348,11 +354,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupExit:
 			b.locker.RLock()
@@ -365,11 +373,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupExitSuccess:
 			b.locker.RLock()
@@ -382,11 +392,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupAdminSysNotify:
 			b.locker.RLock()
@@ -399,11 +411,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupRevoke:
 			b.locker.RLock()
@@ -416,11 +430,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupShut:
 			b.locker.RLock()
@@ -433,11 +449,13 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		case EventNameOnGroupSystemNotify:
 			b.locker.RLock()
@@ -450,18 +468,23 @@ func (b *BotManager) Start() error {
 					log.Println("解析包错误")
 					return
 				}
-				result.Bot = b
-				result.f = f
-				result.NowIndex = 0
-				result.MaxIndex = len(f) - 1
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				for _, v := range f {
+					result.Bot = b
+					result.f = v
+					result.NowIndex = 0
+					result.MaxIndex = len(v) - 1
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(&result)})
+				}
 			}
 		default:
 			b.locker.RLock()
 			defer b.locker.RUnlock()
 			f, ok := b.onEvent[EventNameOnOther]
 			if ok && len(f) >= 1 {
-				f[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args)})
+				for _, v := range f {
+					v[0].Call([]reflect.Value{reflect.ValueOf(args.CurrentQQ), reflect.ValueOf(args)})
+				}
+
 			}
 		}
 	})
@@ -940,7 +963,7 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 	}
 	b.locker.Lock()
 	defer b.locker.Unlock()
-	b.onEvent[EventName] = events
+	b.onEvent[EventName] = append(b.onEvent[EventName], events)
 	return nil
 
 }
