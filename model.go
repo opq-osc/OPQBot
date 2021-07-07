@@ -164,6 +164,7 @@ type MyRecord struct {
 	Content     string `json:"Content"`
 }
 type Context struct {
+	Ban      bool
 	NowIndex int
 	MaxIndex int
 	f        []reflect.Value
@@ -171,6 +172,9 @@ type Context struct {
 }
 
 func (ctx *Context) Next(currentQQ int64, result interface{}) {
+	if ctx.Ban {
+		return
+	}
 	if ctx.NowIndex >= ctx.MaxIndex {
 		return
 	}
