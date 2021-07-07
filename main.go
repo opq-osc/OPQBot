@@ -268,6 +268,9 @@ func (b *BotManager) Start() error {
 				}()
 			}
 			for _, v := range f {
+				if result.Ban {
+					return
+				}
 				result.Bot = b
 				result.f = v
 				result.NowIndex = 0
@@ -296,6 +299,9 @@ func (b *BotManager) Start() error {
 				return
 			}
 			for _, v := range f {
+				if result.Ban {
+					return
+				}
 				result.Bot = b
 				result.f = v
 				result.NowIndex = 0
@@ -336,6 +342,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -355,6 +364,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -374,6 +386,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -393,6 +408,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -412,6 +430,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -431,6 +452,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -450,6 +474,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
@@ -469,6 +496,9 @@ func (b *BotManager) Start() error {
 					return
 				}
 				for _, v := range f {
+					if result.Ban {
+						return
+					}
 					result.Bot = b
 					result.f = v
 					result.NowIndex = 0
