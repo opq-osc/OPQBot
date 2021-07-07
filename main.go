@@ -555,7 +555,7 @@ func (b *BotManager) ReCallMsg(GroupID, MsgRandom int64, MsgSeq int) error {
 		return err
 	}
 	if result.Ret != 0 {
-		return errors.New("Error ")
+		return errors.New("Error 撤回失败")
 	} else {
 		return nil
 	}
@@ -574,7 +574,7 @@ func (b *BotManager) RefreshKey() error {
 		return err
 	}
 	if result.Ret != 0 {
-		return errors.New("Error ")
+		return errors.New("Error 刷新Key失败")
 	} else {
 		return nil
 	}
