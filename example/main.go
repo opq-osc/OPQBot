@@ -16,12 +16,12 @@ import (
 var ZanNote = map[int64]int{}
 
 func main() {
+	// log.Println(OPQBot.DecodeFaceFromSentences("[表情123]啦啦啦[表情0]","[表情:%s]"))
 	if len(os.Args) != 2 {
 		return
 	}
 	opqBot := OPQBot.NewBotManager(2629326992, os.Args[1])
 	// 设置发送队列每次发送的间隔时间 默认1000ms
-	opqBot.SetSendDelayed(1000)
 	// 设置最大重试次数
 	opqBot.SetMaxRetryCount(5)
 	err := opqBot.Start()

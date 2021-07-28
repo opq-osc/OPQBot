@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"os"
 	"os/exec"
@@ -19,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/goinggo/mapstructure"
 	gosocketio "github.com/mcoo/OPQBot/golang-socketio-edit"
 	"github.com/mcoo/OPQBot/golang-socketio-edit/transport"
@@ -56,37 +56,33 @@ func (b *BotManager) SetMaxRetryCount(maxRetryCount int) {
 
 var interrupt chan os.Signal
 
-func init() {
-	interrupt = make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, os.Kill)
-}
 func (b *BotManager) Wait() {
 home:
 	b.wg.Wait()
 	if b.MaxRetryCount > 0 {
 		for i := 0; i < b.MaxRetryCount; i++ {
-			log.Println("等待重试,要终止请按下Ctrl+C")
+			log.Info("等待重试,要终止请按下Ctrl+C")
 			select {
 			case <-b.Done:
 
 				b.Running = false
-				log.Println("Bot结束")
+				log.Info("Bot结束")
 				return
 
 			case <-time.After(5 * time.Second):
-				log.Println("正在重连")
+				log.Warn("正在重连")
 			}
-			log.Printf("重连尝试第%d/%d次\n", i+1, b.MaxRetryCount)
+			log.Warningf("重连尝试第%d/%d次\n", i+1, b.MaxRetryCount)
 			err := b.Start()
 			if err != nil {
-				log.Println(err)
+				log.Error(err)
 			} else {
 				goto home
 			}
 		}
 	}
 	b.Running = false
-	log.Println("Bot结束")
+	log.Info("Bot结束")
 }
 
 // VoiceMp3ToSilk Mp3转Silk mp3->silk Output: base64 String
@@ -149,7 +145,25 @@ func VoiceSilkToMp3(base64EncodedSilk string) ([]byte, error) {
 	return tresult, nil
 }
 
+var log *logrus.Entry
+
+func init() {
+	interrupt = make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, os.Kill)
+	l := logrus.New()
+	l.SetLevel(logrus.InfoLevel)
+	l.SetFormatter(&nested.Formatter{
+		HideKeys:        true,
+		FieldsOrder:     []string{"component", "category"},
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+	log = l.WithField("Core", "OPQBOT")
+}
+func SetLog(l *logrus.Entry) {
+	log = l
+}
 func NewBotManager(QQ int64, OPQUrl string) BotManager {
+
 	s, err := session.NewManager("qq", 3600)
 	if err != nil {
 		panic(err)
@@ -160,13 +174,13 @@ func NewBotManager(QQ int64, OPQUrl string) BotManager {
 		for {
 			select {
 			case <-interrupt:
-				log.Println("程序被用户终止,正在进行释放资源操作!")
+				log.Info("程序被用户终止,正在进行释放资源操作!")
 				b.MaxRetryCount = 0
 				b.Done <- 0
 				b.Done <- 0
 				b.Done <- 0
 			case <-b.restart:
-				log.Println("程序重连尝试!")
+				log.Warn("程序重连尝试!")
 				b.Done <- 1
 				b.Done <- 2
 			}
@@ -247,7 +261,7 @@ func (b *BotManager) Start() error {
 			result := GroupMsgPack{}
 			err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 			if err != nil {
-				log.Println("解析包错误")
+				log.Error("解析包错误")
 				return
 			}
 			reg1, _ := regexp.Compile(`\[([0-9]{1,5})\]`)
@@ -295,7 +309,7 @@ func (b *BotManager) Start() error {
 			result := FriendMsgPack{}
 			err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 			if err != nil {
-				log.Println("解析包错误")
+				log.Error("解析包错误")
 				return
 			}
 			for _, v := range f {
@@ -321,12 +335,12 @@ func (b *BotManager) Start() error {
 		}
 		e, ok := args.CurrentPacket.Data.(map[string]interface{})
 		if !ok {
-			log.Println("解析出错")
+			log.Error("解析出错")
 			return
 		}
 		e1, ok := e["EventName"].(string)
 		if !ok {
-			log.Println("解析出错")
+			log.Error("解析出错")
 			return
 		}
 		switch e1 {
@@ -338,7 +352,7 @@ func (b *BotManager) Start() error {
 				result := GroupJoinPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -360,7 +374,7 @@ func (b *BotManager) Start() error {
 				result := GroupAdminPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -382,7 +396,7 @@ func (b *BotManager) Start() error {
 				result := GroupExitPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -404,7 +418,7 @@ func (b *BotManager) Start() error {
 				result := GroupExitSuccessPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -426,7 +440,7 @@ func (b *BotManager) Start() error {
 				result := GroupAdminSysNotifyPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -448,7 +462,7 @@ func (b *BotManager) Start() error {
 				result := GroupRevokePack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -470,7 +484,7 @@ func (b *BotManager) Start() error {
 				result := GroupShutPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -492,7 +506,7 @@ func (b *BotManager) Start() error {
 				result := GroupSystemNotifyPack{}
 				err = mapstructure.Decode(args.CurrentPacket.Data, &result)
 				if err != nil {
-					log.Println("解析包错误")
+					log.Error("解析包错误")
 					return
 				}
 				for _, v := range f {
@@ -600,8 +614,6 @@ func (b *BotManager) Announce(title, text string, pinned, announceType int, grou
 // UploadFileWithBase64 上传群文件
 func (b *BotManager) UploadFileWithBase64(FileName, FileBase64 string, ToUserUid int64, Notify bool) error {
 	var result Result
-	js, _ := json.Marshal(map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FileBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
-	log.Println(string(js))
 	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"ToUserUid": ToUserUid, "Notify": Notify, "FileName": FileName, "FileBase64": FileBase64, "SendMsgType": "UploadGroupFile"})
 	if err != nil {
 		return err
@@ -876,7 +888,6 @@ func (b *BotManager) GetUserCardInfo(qq int64) (UserCardInfo, error) {
 		// log.Println(err.Error())
 		return result, err
 	}
-	log.Println(res.Text())
 	err = res.Json(&result)
 	if err != nil {
 		return result, err
@@ -887,7 +898,7 @@ func (b *BotManager) GetUserCardInfo(qq int64) (UserCardInfo, error) {
 // OldSendVoice 发送语音 旧版 将被移出
 func (b *BotManager) OldSendVoice(userID int64, sendToType int, data string) error {
 	//var result Result
-	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsg&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"toUser": userID, "sendToType": sendToType, "sendMsgType": "VoiceMsg", "content": "",
+	_, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsg&qq="+strconv.FormatInt(b.QQ, 10), map[string]interface{}{"toUser": userID, "sendToType": sendToType, "sendMsgType": "VoiceMsg", "content": "",
 		"groupid":        0,
 		"atUser":         0,
 		"voiceUrl":       "",
@@ -897,7 +908,6 @@ func (b *BotManager) OldSendVoice(userID int64, sendToType int, data string) err
 		// log.Println(err.Error())
 		return err
 	}
-	log.Println(res.Text())
 	//err = res.Json(&result)
 	//if err != nil {
 	//	return result, err
@@ -1023,12 +1033,12 @@ func (b *BotManager) CallFunc(FuncName string, funcstruct interface{}) {
 
 }
 func (b *BotManager) receiveSendPack() {
-	log.Println("QQ发送信息通道开启")
+	log.Info("QQ发送信息通道开启")
 OuterLoop:
 	for {
 		select {
 		case <-b.Done:
-			log.Println("发信通道关闭")
+			log.Info("发信通道关闭")
 			b.wg.Done()
 			return
 		case sendMsgPack := <-b.SendChan:
@@ -1186,7 +1196,7 @@ OuterLoop:
 				record.Content = content.Content
 				record.MsgType = "PicMsg"
 			default:
-				log.Println("未知发送的类型")
+				log.Warn("未知发送的类型")
 				continue OuterLoop
 			}
 			for i := 2; i >= 0; i-- {
@@ -1201,9 +1211,9 @@ OuterLoop:
 					r, ok := sendJsonPack["reason"].(string)
 					if len(sendJsonPack) == 1 && ok {
 						if r != "" {
-							log.Println("消息被拦截！拦截原因 " + r)
+							log.Info("消息被拦截！拦截原因 " + r)
 						} else {
-							log.Println("消息被拦截！无拦截原因")
+							log.Info("消息被拦截！无拦截原因")
 						}
 						continue OuterLoop
 					}
@@ -1214,13 +1224,13 @@ OuterLoop:
 			//log.Println(string(tmp))
 			res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname=SendMsgV2&qq="+strconv.FormatInt(b.QQ, 10), sendJsonPack)
 			if err != nil {
-				log.Println(err.Error())
+				log.Error(err.Error())
 				continue
 			}
 			var result Result
 			err = res.Json(&result)
 			if err != nil {
-				log.Println("发送失败！ ", err.Error())
+				log.Warn("发送失败！ ", err.Error())
 				continue
 			}
 			reg1, _ := regexp.Compile(`\[([0-9]{1,5})\]`)
