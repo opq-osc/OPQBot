@@ -52,7 +52,8 @@ func main() {
 	//log.Println(infoReg.FindStringSubmatch(lists.Data.Data[0]["html"].(string))[1])
 
 	//log.Println(ck.PSkey.Qzone)
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet *OPQBot.GroupMsgPack) {
+	var cancel func()
+	cancel, err = opqBot.AddEvent(OPQBot.EventNameOnGroupMessage, VerifyBlackList, func(botQQ int64, packet *OPQBot.GroupMsgPack) {
 		if packet.FromUserID != opqBot.QQ {
 			s := opqBot.Session.SessionStart(packet.FromUserID)
 			//last, _ := s.GetString("last")
@@ -67,6 +68,9 @@ func main() {
 			if packet.Content == "#上传测试" {
 				//b,_ := ioutil.ReadFile("./1.mp3")base64.StdEncoding.EncodeToString(b)
 				log.Println(opqBot.UploadFileWithBase64("1.mp3", "MTIzMTIzMTIzMjEz", packet.FromGroupID, true))
+			}
+			if packet.Content == "取消事件监听" {
+				cancel()
 			}
 			if packet.Content == "#silk" {
 				b, err := OPQBot.VoiceMp3ToSilk("./secret base ~君がくれたもの~ (10 years after Ver.).mp3")
@@ -189,7 +193,7 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet *OPQBot.FriendMsgPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnFriendMessage, func(botQQ int64, packet *OPQBot.FriendMsgPack) {
 		if packet.Content == "赞我" {
 			i, ok := ZanNote[packet.FromUin]
 			if ok {
@@ -259,46 +263,46 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupShut, func(botQQ int64, packet *OPQBot.GroupShutPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupShut, func(botQQ int64, packet *OPQBot.GroupShutPack) {
 		log.Println(botQQ, packet)
 	})
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnConnected, func() {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnConnected, func() {
 		log.Println("连接成功！！！")
 	})
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnDisconnected, func() {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnDisconnected, func() {
 		log.Println("连接断开！！")
 	})
 	if err != nil {
 		log.Println(err.Error())
 	}
-	err = opqBot.AddEvent(OPQBot.EventNameOnOther, func(botQQ int64, e interface{}) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnOther, func(botQQ int64, e interface{}) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupSystemNotify, func(botQQ int64, e *OPQBot.GroupSystemNotifyPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupSystemNotify, func(botQQ int64, e *OPQBot.GroupSystemNotifyPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupRevoke, func(botQQ int64, e *OPQBot.GroupRevokePack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupRevoke, func(botQQ int64, e *OPQBot.GroupRevokePack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupJoin, func(botQQ int64, e *OPQBot.GroupJoinPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupJoin, func(botQQ int64, e *OPQBot.GroupJoinPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdmin, func(botQQ int64, e *OPQBot.GroupAdminPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdmin, func(botQQ int64, e *OPQBot.GroupAdminPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExit, func(botQQ int64, e *OPQBot.GroupExitPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupExit, func(botQQ int64, e *OPQBot.GroupExitPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupExitSuccess, func(botQQ int64, e *OPQBot.GroupExitSuccessPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupExitSuccess, func(botQQ int64, e *OPQBot.GroupExitSuccessPack) {
 		log.Println(e)
 	})
-	err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdminSysNotify, func(botQQ int64, e *OPQBot.GroupAdminSysNotifyPack) {
+	_, err = opqBot.AddEvent(OPQBot.EventNameOnGroupAdminSysNotify, func(botQQ int64, e *OPQBot.GroupAdminSysNotifyPack) {
 		log.Println(e)
 	})
 	if err != nil {

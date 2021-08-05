@@ -952,12 +952,15 @@ func MacroAtAll() string {
 	return "[ATALL()]"
 }
 
-func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
+func (b *BotManager) AddEvent(EventName string, f ...interface{}) (func(), error) {
 	var events []reflect.Value
+	if len(f) == 0 {
+		return nil, errors.New("调用错误")
+	}
 	for _, v := range f {
 		fVal := reflect.ValueOf(v)
 		if fVal.Kind() != reflect.Func {
-			return errors.New("NotFuncError")
+			return nil, errors.New("NotFuncError")
 		}
 		var okStruck string
 		switch EventName {
@@ -988,7 +991,7 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 		case EventNameOnOther:
 			okStruck = "interface {}"
 		default:
-			return errors.New("Unknown EventName ")
+			return nil, errors.New("Unknown EventName ")
 		}
 
 		if fVal.Type().NumIn() == 0 && okStruck == "ok" {
@@ -996,7 +999,7 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 			continue
 		}
 		if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
-			return errors.New(EventName + ": FuncError, Your Function  Should Have " + okStruck + " Your Struct is " + fVal.Type().In(1).String())
+			return nil, errors.New(EventName + ": FuncError, Your Function  Should Have " + okStruck + " Your Struct is " + fVal.Type().In(1).String())
 		}
 
 		events = append(events, fVal)
@@ -1004,7 +1007,19 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 	b.locker.Lock()
 	defer b.locker.Unlock()
 	b.onEvent[EventName] = append(b.onEvent[EventName], events)
-	return nil
+	return func() {
+		b.locker.Lock()
+		defer b.locker.Unlock()
+		for i, v := range b.onEvent[EventName] {
+			if len(v) > 0 && v[0] == reflect.ValueOf(f[0]) {
+				if len(b.onEvent[EventName]) == 1 {
+					delete(b.onEvent, EventName)
+					break
+				}
+				b.onEvent[EventName] = append(b.onEvent[EventName][:i], b.onEvent[EventName][i+1:]...)
+			}
+		}
+	}, nil
 
 }
 
