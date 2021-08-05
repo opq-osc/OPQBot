@@ -1029,8 +1029,12 @@ func (b *BotManager) RegSendMiddleware(priority int, f func(m map[string]interfa
 	b.middleware = append(b.middleware, middle)
 	return nil
 }
-func (b *BotManager) CallFunc(FuncName string, funcstruct interface{}) {
-
+func (b *BotManager) CallFunc(FuncName string, funcStruct string) ([]byte, error) {
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname="+FuncName+"&qq="+strconv.FormatInt(b.QQ, 10), funcStruct)
+	if err != nil {
+		return nil, err
+	}
+	return res.Content(), nil
 }
 func (b *BotManager) receiveSendPack() {
 	log.Info("QQ发送信息通道开启")
