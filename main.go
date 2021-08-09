@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -56,6 +57,67 @@ func (b *BotManager) SetMaxRetryCount(maxRetryCount int) {
 
 var interrupt chan os.Signal
 
+func ParserGroupAtMsg(pack GroupMsgPack) (a AtMsg, e error) {
+	if pack.MsgType != "AtMsg" {
+		e = errors.New("Not AtMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func (a AtMsg) Clean() AtMsg {
+	for _, v := range a.UserExt {
+		a.Content = strings.TrimSpace(strings.ReplaceAll(a.Content, "@"+v.QQNick, ""))
+	}
+	return a
+}
+func ParserGroupReplyMsg(pack GroupMsgPack) (a Reply, e error) {
+	if pack.MsgType != "AtMsg" {
+		e = errors.New("Not ReplyMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func ParserGroupPicMsg(pack GroupMsgPack) (a PicMsg, e error) {
+	if pack.MsgType != "PicMsg" {
+		e = errors.New("Not PicMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func ParserGroupFileMsg(pack GroupMsgPack) (a GroupFileMsg, e error) {
+	if pack.MsgType != "GroupFileMsg" {
+		e = errors.New("Not GroupFileMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func ParserVideoMsg(pack GroupMsgPack) (a VideoMsg, e error) {
+	if pack.MsgType != "VideoMsg" {
+		e = errors.New("Not VideoMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
 func (b *BotManager) Wait() {
 home:
 	b.wg.Wait()

@@ -497,3 +497,52 @@ type Cookie struct {
 	} `json:"PSkey"`
 	Skey string `json:"Skey"`
 }
+type AtMsg struct {
+	Content string `json:"Content"`
+	UserExt []struct {
+		QQNick string `json:"QQNick"`
+		QQUID  int64  `json:"QQUid"`
+	} `json:"UserExt"`
+	UserID []int64 `json:"UserID"`
+}
+type Reply struct {
+	Content    string  `json:"Content"`
+	SrcContent string  `json:"SrcContent"`
+	MsgSeq     int     `json:"MsgSeq"`
+	Tips       string  `json:"Tips"`
+	UserID     []int64 `json:"UserID"`
+}
+
+type PicMsg struct {
+	Content  string `json:"Content"`
+	GroupPic []struct {
+		FileId       int64  `json:"FileId"`
+		FileMd5      string `json:"FileMd5"`
+		FileSize     int    `json:"FileSize"`
+		ForwordBuf   string `json:"ForwordBuf"`
+		ForwordField int    `json:"ForwordField"`
+		Url          string `json:"Url"`
+	} `json:"GroupPic"`
+	Tips    string `json:"Tips"`
+	UserExt []struct {
+		QQNick string `json:"QQNick"`
+		QQUid  int64  `json:"QQUid"`
+	} `json:"UserExt"`
+	UserID []int64 `json:"UserID"`
+}
+
+type GroupFileMsg struct {
+	FileID   string `json:"FileID"`
+	FileName string `json:"FileName"`
+	FileSize int    `json:"FileSize"`
+	Tips     string `json:"Tips"`
+}
+
+type VideoMsg struct {
+	ForwordBuf   string `json:"ForwordBuf"`
+	ForwordField int    `json:"ForwordField"`
+	VideoMd5     string `json:"VideoMd5"`
+	VideoSize    string `json:"VideoSize"`
+	VideoUrl     string `json:"VideoUrl"`
+	Tips         string `json:"Tips"`
+}
