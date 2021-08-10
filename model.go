@@ -140,21 +140,21 @@ type SendTypeForwordContentPrivateChat struct {
 	Group        int64
 }
 
-type SendTypeRelayContent struct {
+type SendTypeReplyContent struct {
 	ReplayInfo struct {
 		MsgSeq     int    `json:"MsgSeq"`
 		MsgTime    int    `json:"MsgTime"`
-		UserID     int    `json:"UserID"`
+		UserID     int64  `json:"UserID"`
 		RawContent string `json:"RawContent"`
 	} `json:"ReplayInfo"`
 	Content string
 }
 
-type SendTypeRelayContentPrivateChat struct {
+type SendTypeReplyContentPrivateChat struct {
 	ReplayInfo struct {
 		MsgSeq     int    `json:"MsgSeq"`
 		MsgTime    int    `json:"MsgTime"`
-		UserID     int    `json:"UserID"`
+		UserID     int64  `json:"UserID"`
 		RawContent string `json:"RawContent"`
 	} `json:"ReplayInfo"`
 	Content string

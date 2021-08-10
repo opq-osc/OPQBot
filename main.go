@@ -1252,11 +1252,11 @@ OuterLoop:
 				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ForwordMsg"
 
-			case SendTypeRelayContent:
+			case SendTypeReplyContent:
 				sendJsonPack["ReplayInfo"] = content.ReplayInfo
 				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ReplayMsg"
-			case SendTypeRelayContentPrivateChat:
+			case SendTypeReplyContentPrivateChat:
 				sendJsonPack["SendMsgType"] = "ReplayMsg"
 				sendJsonPack["Content"] = content.Content
 				sendJsonPack["SendToType"] = sendMsgPack.SendToType
