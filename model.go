@@ -130,21 +130,35 @@ type SendTypeJsonContentPrivateChat struct {
 type SendTypeForwordContent struct {
 	ForwordBuf   string
 	ForwordField int
+	Content      string
 }
 
 type SendTypeForwordContentPrivateChat struct {
 	ForwordBuf   string
+	Content      string
 	ForwordField int
 	Group        int64
 }
 
 type SendTypeRelayContent struct {
-	ReplayInfo interface{}
+	ReplayInfo struct {
+		MsgSeq     int    `json:"MsgSeq"`
+		MsgTime    int    `json:"MsgTime"`
+		UserID     int    `json:"UserID"`
+		RawContent string `json:"RawContent"`
+	} `json:"ReplayInfo"`
+	Content string
 }
 
 type SendTypeRelayContentPrivateChat struct {
-	ReplayInfo interface{}
-	Group      int64
+	ReplayInfo struct {
+		MsgSeq     int    `json:"MsgSeq"`
+		MsgTime    int    `json:"MsgTime"`
+		UserID     int    `json:"UserID"`
+		RawContent string `json:"RawContent"`
+	} `json:"ReplayInfo"`
+	Content string
+	Group   int64
 }
 
 type returnPack struct {

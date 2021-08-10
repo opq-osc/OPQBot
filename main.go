@@ -1241,6 +1241,7 @@ OuterLoop:
 				sendJsonPack["SendToType"] = sendMsgPack.SendToType
 				sendJsonPack["ForwordBuf"] = content.ForwordBuf
 				sendJsonPack["ForwordField"] = content.ForwordField
+				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ForwordMsg"
 			case SendTypeForwordContentPrivateChat:
 				sendJsonPack["SendMsgType"] = "ForwordMsg"
@@ -1248,13 +1249,16 @@ OuterLoop:
 				sendJsonPack["ForwordBuf"] = content.ForwordBuf
 				sendJsonPack["ForwordField"] = content.ForwordField
 				sendJsonPack["GroupID"] = content.Group
+				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ForwordMsg"
 
 			case SendTypeRelayContent:
 				sendJsonPack["ReplayInfo"] = content.ReplayInfo
+				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ReplayMsg"
 			case SendTypeRelayContentPrivateChat:
 				sendJsonPack["SendMsgType"] = "ReplayMsg"
+				sendJsonPack["Content"] = content.Content
 				sendJsonPack["SendToType"] = sendMsgPack.SendToType
 				sendJsonPack["ReplayInfo"] = content.ReplayInfo
 				sendJsonPack["GroupID"] = content.Group
