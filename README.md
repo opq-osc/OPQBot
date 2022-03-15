@@ -17,9 +17,21 @@
 ### 安装 💡
 ` github.com/mcoo/OPQBot@latest`
 
-请看 [wiki](https://mcenjoy.cn/opqwiki)
+请看 [wiki](https://mcenjoy.cn/opqbotwiki/)
 
 以example文件为准 [example](https://github.com/opq-osc/OPQBot/blob/main/example/main.go)
+
+### 使用本项目的一些开源项目 ❤️
+|项目|介绍|
+|-|-|
+|[opq-osc/OPQBot-GroupManager](https://github.com/opq-osc/OPQBot-GroupManager)|群管理机器人示例 - 带web面板和模块化示例|
+|[icepie/oh-my-lit](https://github.com/icepie/oh-my-lit)|Oh My LIT (吾之洛理)|
+|[OPQBOT-jikipedia](https://github.com/opq-osc/OPQBOT-jikipedia)|查梗插件|
+|[Liumik233/Aria2M-OPQBot](https://github.com/Liumik233/Aria2M-OPQBot)|本bot通过文字指令的形式将下载链接或bt种子下推送到Aria2服务器进行下载，以后可能会增加下载度盘链接功能|
+|[Liumik233/OPQ-Plugins](https://github.com/Liumik233/OPQ-Plugins)|一些琐碎的OPQBOT插件|
+
+
+以上排名不分先后，感谢！
 
 ### 没人看的更新历史 ✏️
 ```
@@ -37,4 +49,5 @@
 20210512    packet现在修改为传递指针，请注意
 20210523    添加快捷发信息的函数
 20210529    修复群文件上传BUG
+20210531    修复Wait函数的BUG
 ```
