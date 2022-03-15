@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -17,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/goinggo/mapstructure"
@@ -56,6 +58,67 @@ func (b *BotManager) SetMaxRetryCount(maxRetryCount int) {
 
 var interrupt chan os.Signal
 
+func ParserGroupAtMsg(pack GroupMsgPack) (a AtMsg, e error) {
+	if pack.MsgType != "AtMsg" {
+		e = errors.New("Not AtMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func (a AtMsg) Clean() AtMsg {
+	for _, v := range a.UserExt {
+		a.Content = strings.TrimSpace(strings.ReplaceAll(a.Content, "@"+v.QQNick, ""))
+	}
+	return a
+}
+func ParserGroupReplyMsg(pack GroupMsgPack) (a Reply, e error) {
+	if pack.MsgType != "AtMsg" {
+		e = errors.New("Not ReplyMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func ParserGroupPicMsg(pack GroupMsgPack) (a PicMsg, e error) {
+	if pack.MsgType != "PicMsg" {
+		e = errors.New("Not PicMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func ParserGroupFileMsg(pack GroupMsgPack) (a GroupFileMsg, e error) {
+	if pack.MsgType != "GroupFileMsg" {
+		e = errors.New("Not GroupFileMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
+func ParserVideoMsg(pack GroupMsgPack) (a VideoMsg, e error) {
+	if pack.MsgType != "VideoMsg" {
+		e = errors.New("Not VideoMsg. ")
+		return
+	}
+	e = json.Unmarshal([]byte(pack.Content), &a)
+	if e != nil {
+		return
+	}
+	return
+}
 func (b *BotManager) Wait() {
 home:
 	b.wg.Wait()
@@ -162,14 +225,14 @@ func init() {
 func SetLog(l *logrus.Entry) {
 	log = l
 }
-func NewBotManager(QQ int64, OPQUrl string) BotManager {
+func NewBotManager(QQ int64, OPQUrl string) *BotManager {
 
 	s, err := session.NewManager("qq", 3600)
 	if err != nil {
 		panic(err)
 	}
 	go s.GC()
-	b := BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	b := &BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 	go func() {
 		for {
 			select {
@@ -952,12 +1015,15 @@ func MacroAtAll() string {
 	return "[ATALL()]"
 }
 
-func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
+func (b *BotManager) AddEvent(EventName string, f ...interface{}) (func(), error) {
 	var events []reflect.Value
+	if len(f) == 0 {
+		return nil, errors.New("调用错误")
+	}
 	for _, v := range f {
 		fVal := reflect.ValueOf(v)
 		if fVal.Kind() != reflect.Func {
-			return errors.New("NotFuncError")
+			return nil, errors.New("NotFuncError")
 		}
 		var okStruck string
 		switch EventName {
@@ -988,7 +1054,7 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 		case EventNameOnOther:
 			okStruck = "interface {}"
 		default:
-			return errors.New("Unknown EventName ")
+			return nil, errors.New("Unknown EventName ")
 		}
 
 		if fVal.Type().NumIn() == 0 && okStruck == "ok" {
@@ -996,7 +1062,7 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 			continue
 		}
 		if fVal.Type().NumIn() != 2 || fVal.Type().In(1).String() != okStruck {
-			return errors.New(EventName + ": FuncError, Your Function  Should Have " + okStruck + " Your Struct is " + fVal.Type().In(1).String())
+			return nil, errors.New(EventName + ": FuncError, Your Function  Should Have " + okStruck + " Your Struct is " + fVal.Type().In(1).String())
 		}
 
 		events = append(events, fVal)
@@ -1004,7 +1070,19 @@ func (b *BotManager) AddEvent(EventName string, f ...interface{}) error {
 	b.locker.Lock()
 	defer b.locker.Unlock()
 	b.onEvent[EventName] = append(b.onEvent[EventName], events)
-	return nil
+	return func() {
+		b.locker.Lock()
+		defer b.locker.Unlock()
+		for i, v := range b.onEvent[EventName] {
+			if len(v) > 0 && v[0] == reflect.ValueOf(f[0]) {
+				if len(b.onEvent[EventName]) == 1 {
+					delete(b.onEvent, EventName)
+					break
+				}
+				b.onEvent[EventName] = append(b.onEvent[EventName][:i], b.onEvent[EventName][i+1:]...)
+			}
+		}
+	}, nil
 
 }
 
@@ -1029,8 +1107,12 @@ func (b *BotManager) RegSendMiddleware(priority int, f func(m map[string]interfa
 	b.middleware = append(b.middleware, middle)
 	return nil
 }
-func (b *BotManager) CallFunc(FuncName string, funcstruct interface{}) {
-
+func (b *BotManager) CallFunc(FuncName string, funcStruct string) ([]byte, error) {
+	res, err := requests.PostJson(b.OPQUrl+"/v1/LuaApiCaller?funcname="+FuncName+"&qq="+strconv.FormatInt(b.QQ, 10), funcStruct)
+	if err != nil {
+		return nil, err
+	}
+	return res.Content(), nil
 }
 func (b *BotManager) receiveSendPack() {
 	log.Info("QQ发送信息通道开启")
@@ -1160,6 +1242,7 @@ OuterLoop:
 				sendJsonPack["SendToType"] = sendMsgPack.SendToType
 				sendJsonPack["ForwordBuf"] = content.ForwordBuf
 				sendJsonPack["ForwordField"] = content.ForwordField
+				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ForwordMsg"
 			case SendTypeForwordContentPrivateChat:
 				sendJsonPack["SendMsgType"] = "ForwordMsg"
@@ -1167,13 +1250,18 @@ OuterLoop:
 				sendJsonPack["ForwordBuf"] = content.ForwordBuf
 				sendJsonPack["ForwordField"] = content.ForwordField
 				sendJsonPack["GroupID"] = content.Group
+				sendJsonPack["Content"] = content.Content
 				record.MsgType = "ForwordMsg"
 
-			case SendTypeRelayContent:
-				sendJsonPack["ReplayInfo"] = content.ReplayInfo
-				record.MsgType = "ReplayMsg"
-			case SendTypeRelayContentPrivateChat:
+			case SendTypeReplyContent:
 				sendJsonPack["SendMsgType"] = "ReplayMsg"
+				sendJsonPack["ReplayInfo"] = content.ReplayInfo
+				sendJsonPack["SendToType"] = sendMsgPack.SendToType
+				sendJsonPack["Content"] = content.Content
+				record.MsgType = "ReplayMsg"
+			case SendTypeReplyContentPrivateChat:
+				sendJsonPack["SendMsgType"] = "ReplayMsg"
+				sendJsonPack["Content"] = content.Content
 				sendJsonPack["SendToType"] = sendMsgPack.SendToType
 				sendJsonPack["ReplayInfo"] = content.ReplayInfo
 				sendJsonPack["GroupID"] = content.Group
@@ -1266,7 +1354,7 @@ OuterLoop:
 						sendMsgPack.CallbackFunc(result.Ret, result.Msg, myRecordPack)
 						stop <- true
 
-					case <-time.After(2 * time.Second):
+					case <-time.After(10 * time.Second):
 						sendMsgPack.CallbackFunc(result.Ret, result.Msg, MyRecord{})
 						stop <- true
 					}
