@@ -3,14 +3,15 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/mcoo/OPQBot"
-	"github.com/mcoo/requests"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mcoo/OPQBot"
+	"github.com/mcoo/requests"
 )
 
 var ZanNote = map[int64]int{}
@@ -100,6 +101,24 @@ func main() {
 			}
 			// 只有消息内容中含有宏OPQBot.MacroId() record 中才有消息的值，才能去用于撤回消息！
 			if packet.Content == "#撤回测试" {
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "20s撤回测试！\n" + OPQBot.MacroId()},
+					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
+						time.Sleep(20 * time.Second)
+						_ = opqBot.ReCallMsg(record.FromGroupID, record.MsgRandom, record.MsgSeq)
+					},
+				})
+				opqBot.Send(OPQBot.SendMsgPack{
+					SendToType: OPQBot.SendToTypeGroup,
+					ToUserUid:  packet.FromGroupID,
+					Content:    OPQBot.SendTypeTextMsgContent{Content: OPQBot.MacroAt([]int64{packet.FromUserID}) + "20s撤回测试！\n" + OPQBot.MacroId()},
+					CallbackFunc: func(Code int, Info string, record OPQBot.MyRecord) {
+						time.Sleep(20 * time.Second)
+						_ = opqBot.ReCallMsg(record.FromGroupID, record.MsgRandom, record.MsgSeq)
+					},
+				})
 				opqBot.Send(OPQBot.SendMsgPack{
 					SendToType: OPQBot.SendToTypeGroup,
 					ToUserUid:  packet.FromGroupID,

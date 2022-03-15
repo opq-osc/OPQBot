@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/goinggo/mapstructure"
@@ -224,14 +225,14 @@ func init() {
 func SetLog(l *logrus.Entry) {
 	log = l
 }
-func NewBotManager(QQ int64, OPQUrl string) BotManager {
+func NewBotManager(QQ int64, OPQUrl string) *BotManager {
 
 	s, err := session.NewManager("qq", 3600)
 	if err != nil {
 		panic(err)
 	}
 	go s.GC()
-	b := BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
+	b := &BotManager{restart: make(chan int, 1), Session: s, Done: make(chan int, 10), MaxRetryCount: 10, wg: sync.WaitGroup{}, QQ: QQ, OPQUrl: OPQUrl, SendChan: make(chan SendMsgPack, 1024), onEvent: make(map[string][][]reflect.Value), myRecord: map[string]MyRecord{}, myRecordLocker: sync.RWMutex{}, locker: sync.RWMutex{}, delayed: 1000}
 	go func() {
 		for {
 			select {
@@ -1353,7 +1354,7 @@ OuterLoop:
 						sendMsgPack.CallbackFunc(result.Ret, result.Msg, myRecordPack)
 						stop <- true
 
-					case <-time.After(2 * time.Second):
+					case <-time.After(10 * time.Second):
 						sendMsgPack.CallbackFunc(result.Ret, result.Msg, MyRecord{})
 						stop <- true
 					}
