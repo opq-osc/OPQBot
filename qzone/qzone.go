@@ -1,18 +1,21 @@
 package qzone
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dop251/goja"
-	"github.com/mcoo/OPQBot"
-	"github.com/mcoo/requests"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dop251/goja"
+	"github.com/mcoo/OPQBot"
+	"github.com/mcoo/requests"
 )
 
 // GenderGTK 生成GTK
@@ -26,13 +29,14 @@ func GenderGTK(sKey string) string {
 }
 
 type Manager struct {
-	r     *requests.Request
-	QQ    string
-	Gtk   string
-	Gtk2  string
-	PSkey string
-	Skey  string
-	Uin   string
+	r          *requests.Request
+	QQ         string
+	Gtk        string
+	Gtk2       string
+	PSkey      string
+	Skey       string
+	Uin        string
+	qzoneToken string
 }
 
 func NewQzoneManager(qq int64, cookie OPQBot.Cookie) Manager {
@@ -85,19 +89,27 @@ func NewQzoneManager(qq int64, cookie OPQBot.Cookie) Manager {
 	return m
 }
 func (m *Manager) GetQzoneToken() (string, error) {
+	if m.qzoneToken == "" {
+		return "", errors.New("请先刷新QzoneToken！")
+	}
+	return m.qzoneToken, nil
+
+}
+func (m *Manager) RefreshToken() error {
 	res, err := m.r.Get("https://h5.qzone.qq.com/feeds/inpcqq?uin=" + m.QQ + "&qqver=5749&timestamp=" + strconv.FormatInt(time.Now().Unix(), 10))
 	if err != nil {
-		return "", err
+		return err
 	}
 	r, err := regexp.Compile(`window.g_qzonetoken.*try{return "(.*?)";} catch\(e\)`)
 	if err != nil {
-		return "", err
+		return err
 	}
 	result := r.FindStringSubmatch(res.Text())
 	if len(result) == 2 {
-		return result[1], nil
+		m.qzoneToken = result[1]
+		return nil
 	}
-	return "", errors.New("获取qzonetoken失败 ")
+	return errors.New("获取qzonetoken失败 ")
 }
 func (m *Manager) GetShuoShuoList() (ShuoshuoList, error) {
 	m.r.Header.Set("referer", "https://user.qzone.qq.com/"+m.QQ)
@@ -144,41 +156,6 @@ func (m *Manager) SendShuoShuo(Content string) (SendShuoShuoResult, error) {
 		"code_version":     "1",
 		"format":           "json",
 		"qzreferrer":       "https://user.qzone.qq.com/" + m.QQ,
-	})
-	if err != nil {
-		return result, err
-	}
-	err = res.Json(&result)
-	if err != nil {
-		return result, err
-	}
-	return result, nil
-}
-func (m *Manager) SendShuoShuoWithPic(Content, picBo, richVal string) (SendShuoShuoResult, error) {
-	token, err := m.GetQzoneToken()
-	var result SendShuoShuoResult
-	if err != nil {
-		return result, err
-	}
-	m.r.Header.Set("referer", "https://user.qzone.qq.com/"+m.QQ)
-	m.r.Header.Set("Origin", "https://user.qzone.qq.com/")
-	//log.Println(m.r.Header)
-	res, err := m.r.Post("https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk="+m.Gtk2+"&qzonetoken="+token+"&uin="+m.QQ, requests.Datas{
-		"syn_tweet_verson": "1",
-		"paramstr":         "1",
-		"who":              "1",
-		"con":              Content,
-		"feedversion":      "1",
-		"ver":              "1",
-		"ugc_right":        "1",
-		"to_sign":          "0",
-		"hostuin":          m.QQ,
-		"code_version":     "1",
-		"format":           "json",
-		"qzreferrer":       "https://user.qzone.qq.com/" + m.QQ,
-		"pic_bo":           picBo,
-		"richtype":         "1",
-		"richval":          richVal,
 	})
 	if err != nil {
 		return result, err
@@ -237,6 +214,89 @@ func (m *Manager) UploadPic(picBase64 string) (UploadPicResult, error) {
 	}
 	return result, nil
 }
+func (m *Manager) SendShuoShuoWithBase64Pic(Content string, pics []string) (SendShuoShuoResult, error) {
+	var result SendShuoShuoResult
+
+	//获取qzone token
+	token, err := m.GetQzoneToken()
+	if err != nil {
+		return SendShuoShuoResult{}, err
+	}
+
+	//包装request
+	m.r.Header.Set("referer", "https://user.qzone.qq.com/"+m.QQ)
+	m.r.Header.Set("Origin", "https://user.qzone.qq.com/")
+	postDatas := requests.Datas{
+		"syn_tweet_verson": "1",
+		"paramstr":         "1",
+		"who":              "1",
+		"con":              Content,
+		"feedversion":      "1",
+		"ver":              "1",
+		"ugc_right":        "1",
+		"to_sign":          "0",
+		"hostuin":          m.QQ,
+		"code_version":     "1",
+		"format":           "json",
+		"qzreferrer":       "https://user.qzone.qq.com/" + m.QQ,
+	}
+
+	//上传图片
+	richvals := make([]string, 0)
+	pic_bos := make([]string, 0)
+
+	if len(pics) != 0 {
+		//挨个上传图片
+		for _, pic := range pics {
+			uploadPicResult, err := m.UploadPic(pic)
+			if err != nil {
+				return SendShuoShuoResult{}, err
+			}
+
+			//检出此图片的picbo和richval
+			picbo, richva, err := GetPicBoAndRichVal(uploadPicResult)
+			if err != nil {
+				return SendShuoShuoResult{}, err
+			}
+
+			richvals = append(richvals, richva)
+			pic_bos = append(pic_bos, picbo)
+		}
+		//打包进postDatas
+		finalRichVal := strings.Join(richvals, "\t")
+		finalPicBo := strings.Join(pic_bos, ",")
+
+		postDatas["pic_bo"] = finalPicBo
+		postDatas["richtype"] = "1"
+		postDatas["richval"] = finalRichVal
+	}
+
+	res, err := m.r.Post("https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk="+m.Gtk2+"&qzonetoken="+token+"&uin="+m.QQ, postDatas)
+
+	if err != nil {
+		return result, err
+	}
+	err = res.Json(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+func (m *Manager) SendShuoShuoWithLocalPic(content string, pics []string) (SendShuoShuoResult, error) {
+	if len(pics) != 0 {
+		//挨个上传图片
+		base64pics := make([]string, len(pics))
+		for i, pic := range pics {
+			picBase64, err := GetBase64(pic)
+			if err != nil {
+				return SendShuoShuoResult{}, err
+			}
+			base64pics[i] = picBase64
+		}
+		return m.SendShuoShuoWithBase64Pic(content, base64pics)
+	}
+	return SendShuoShuoResult{}, errors.New("Hi give me your pics!!!")
+}
 func (m *Manager) Like(unikey, curkey, appid string) error {
 	token, err := m.GetQzoneToken()
 	if err != nil {
@@ -277,4 +337,15 @@ func GetPicBoAndRichVal(data UploadPicResult) (PicBo, RichVal string, err error)
 	}
 	RichVal = fmt.Sprintf(",%s,%s,%s,%d,%d,%d,,%d,%d", data.Data.Albumid, data.Data.Lloc, data.Data.Sloc, data.Data.Type, data.Data.Height, data.Data.Width, data.Data.Height, data.Data.Width)
 	return
+}
+
+func GetBase64(path string) (string, error) {
+	srcByte, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	res := base64.StdEncoding.EncodeToString(srcByte)
+
+	return res, nil
 }
