@@ -135,15 +135,11 @@ func (m *Manager) GetShuoShuoList() (ShuoshuoList, error) {
 	return ss, nil
 }
 func (m *Manager) SendShuoShuo(Content string) (SendShuoShuoResult, error) {
-	token, err := m.GetQzoneToken()
 	var result SendShuoShuoResult
-	if err != nil {
-		return result, err
-	}
 	m.r.Header.Set("referer", "https://user.qzone.qq.com/"+m.QQ)
 	m.r.Header.Set("Origin", "https://user.qzone.qq.com/")
 	log.Println(m.r.Header)
-	res, err := m.r.Post("https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk="+m.Gtk2+"&qzonetoken="+token+"&uin="+m.QQ, requests.Datas{
+	res, err := m.r.Post("https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk="+m.Gtk2+"&uin="+m.QQ, requests.Datas{
 		"syn_tweet_verson": "1",
 		"paramstr":         "1",
 		"who":              "1",
@@ -167,15 +163,12 @@ func (m *Manager) SendShuoShuo(Content string) (SendShuoShuoResult, error) {
 	return result, nil
 }
 func (m *Manager) UploadPic(picBase64 string) (UploadPicResult, error) {
-	token, err := m.GetQzoneToken()
 	var result UploadPicResult
-	if err != nil {
-		return result, err
-	}
+
 	m.r.Header.Set("referer", "https://user.qzone.qq.com/"+m.QQ)
 	m.r.Header.Set("Origin", "https://user.qzone.qq.com/")
 	//log.Println(m.r.Header)
-	res, err := m.r.Post("https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk="+m.Gtk2+"&qzonetoken="+token+"&uin="+m.QQ, requests.Datas{
+	res, err := m.r.Post("https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk="+m.Gtk2+"&uin="+m.QQ, requests.Datas{
 		"filename":       "filename",
 		"zzpanelkey":     "",
 		"uploadtype":     "1",
@@ -187,7 +180,7 @@ func (m *Manager) UploadPic(picBase64 string) (UploadPicResult, error) {
 		"uin":            m.QQ,
 		"p_skey":         m.PSkey,
 		"output_type":    "json",
-		"qzonetoken":     token,
+		"qzonetoken":     "",
 		"refer":          "shuoshuo",
 		"charset":        "utf-8",
 		"output_charset": "utf-8",
@@ -216,12 +209,6 @@ func (m *Manager) UploadPic(picBase64 string) (UploadPicResult, error) {
 }
 func (m *Manager) SendShuoShuoWithBase64Pic(Content string, pics []string) (SendShuoShuoResult, error) {
 	var result SendShuoShuoResult
-
-	//获取qzone token
-	token, err := m.GetQzoneToken()
-	if err != nil {
-		return SendShuoShuoResult{}, err
-	}
 
 	//包装request
 	m.r.Header.Set("referer", "https://user.qzone.qq.com/"+m.QQ)
@@ -271,7 +258,7 @@ func (m *Manager) SendShuoShuoWithBase64Pic(Content string, pics []string) (Send
 		postDatas["richval"] = finalRichVal
 	}
 
-	res, err := m.r.Post("https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk="+m.Gtk2+"&qzonetoken="+token+"&uin="+m.QQ, postDatas)
+	res, err := m.r.Post("https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk="+m.Gtk2+"&uin="+m.QQ, postDatas)
 
 	if err != nil {
 		return result, err
