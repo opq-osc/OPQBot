@@ -76,7 +76,8 @@ func (a AtMsg) Clean() AtMsg {
 	return a
 }
 func ParserGroupReplyMsg(pack GroupMsgPack) (a Reply, e error) {
-	if pack.MsgType != "AtMsg" {
+	// Why OPQbot returns "replay" ...???
+	if pack.MsgType != "ReplayMsg" {
 		e = errors.New("Not ReplyMsg. ")
 		return
 	}
