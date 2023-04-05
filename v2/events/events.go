@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/opq-osc/OPQBot/v2/apiBuilder"
+	"strings"
 )
 
 type EventName string
@@ -25,10 +26,14 @@ type IEvent interface {
 	GetEventName() EventName
 	ParseGroupMsg() IGroupMsg
 	GetApiBuilder() apiBuilder.IMainFunc
+	ExcludeBot() IEvent
 }
 type IGroupMsg interface {
 	ICommonMsg
+	ExcludeAtInfo() IGroupMsg
+	AtBot() bool
 	GetGroupUin() int64
+	GetSenderUin() int64
 	ParseTextMsg() ITextMsg
 }
 type ITextMsg interface {
@@ -76,15 +81,18 @@ type EventStruct struct {
 				C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 			} `json:"MsgHead"`
 			MsgBody struct {
-				SubMsgType int         `json:"SubMsgType"`
-				Content    string      `json:"Content"`
-				AtUinLists interface{} `json:"AtUinLists"`
+				SubMsgType int    `json:"SubMsgType"`
+				Content    string `json:"Content"`
 				Images     []struct {
 					FileId   int64  `json:"FileId"`
 					FileMd5  string `json:"FileMd5"`
 					FileSize int    `json:"FileSize"`
 					Url      string `json:"Url"`
 				} `json:"Images"`
+				AtUinLists []struct {
+					QQNick string `json:"QQNick"`
+					QQUid  int64  `json:"QQUid"`
+				} `json:"AtUinLists"`
 				Video interface{} `json:"Video"`
 				Voice interface{} `json:"Voice"`
 			} `json:"MsgBody"`
@@ -94,6 +102,39 @@ type EventStruct struct {
 	CurrentQQ int64 `json:"CurrentQQ"`
 }
 
+func (e *EventStruct) GetAtList() (list []int64) {
+	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
+		list = append(list, v.QQUid)
+	}
+	return list
+}
+func (e *EventStruct) AtBot() (at bool) {
+	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
+		if v.QQUid == e.CurrentQQ {
+			at = true
+			break
+		}
+	}
+	return at
+}
+func (e *EventStruct) ExcludeAtInfo() IGroupMsg {
+	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
+		e.CurrentPacket.EventData.MsgBody.Content = strings.ReplaceAll(e.CurrentPacket.EventData.MsgBody.Content, "@"+v.QQNick, "")
+	}
+	e.CurrentPacket.EventData.MsgBody.Content = strings.TrimSpace(e.CurrentPacket.EventData.MsgBody.Content)
+	return e
+}
+
+func (e *EventStruct) ExcludeBot() IEvent {
+	if e.CurrentQQ == e.CurrentPacket.EventData.MsgHead.FromUin {
+		return nil
+	} else {
+		return e
+	}
+}
+func (e *EventStruct) GetSenderUin() int64 {
+	return e.CurrentPacket.EventData.MsgHead.SenderUin
+}
 func (e *EventStruct) GetApiBuilder() apiBuilder.IMainFunc {
 	return apiBuilder.NewApi(e.apiUrl, e.CurrentQQ)
 }
