@@ -110,9 +110,12 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 			c.lock.RLock()
 			callbacks = c.events[event.GetEventName()]
 			c.lock.RUnlock()
-			for _, v := range callbacks {
-				v(ctx, event)
-			}
+			go func() {
+				for _, v := range callbacks {
+					v(ctx, event)
+				}
+			}()
+
 		}
 
 	}()
