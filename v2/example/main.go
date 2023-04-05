@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-	core, err := OPQBot.NewCore("http://localhost:8086")
+	core, err := OPQBot.NewCore("http://localhost:8086", 10)
 	if err != nil {
 		panic(err)
 	}
-	core.On(events.EventNewMsg, func(ctx context.Context, event events.IEvent) {
+	core.On(events.EventNameNewMsg, func(ctx context.Context, event events.IEvent) {
 		apiBuilder := event.GetApiBuilder()
 		groupMsg := event.ParseGroupMsg()
 		if groupMsg.ParseTextMsg().GetTextContent() == "hello" {
