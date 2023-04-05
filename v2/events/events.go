@@ -9,7 +9,12 @@ import (
 type EventName string
 
 const (
-	EventNewMsg EventName = "ON_EVENT_QQNT_NEW_MSG"
+	EventNameNewMsg      EventName = "ON_EVENT_QQNT_NEW_MSG"
+	EventNameGroupMsg    EventName = "ON_EVENT_GROUP_NEW_MSG"
+	EventNameFriendMsg   EventName = "ON_EVENT_FRIEND_NEW_MSG"
+	EventNameGroupJoin   EventName = "ON_EVENT_GROUP_JOIN"
+	EventNameGroupExit   EventName = "ON_EVENT_GROUP_EXIT"
+	EventNameGroupInvite EventName = "ON_EVENT_GROUP_EXIT"
 )
 
 type EventCallbackFunc func(ctx context.Context, event IEvent)
@@ -32,6 +37,8 @@ type ITextMsg interface {
 
 type ICommonMsg interface {
 	GetMsgUid() int64
+	GetMsgType() int
+	GetMsgTime() int64
 }
 
 func New(apiUrl string, data []byte) (IEvent, error) {
@@ -53,9 +60,9 @@ type EventStruct struct {
 				SenderNick string `json:"SenderNick"`
 				MsgType    int    `json:"MsgType"`
 				C2CCmd     int    `json:"C2cCmd"`
-				MsgSeq     int    `json:"MsgSeq"`
-				MsgTime    int    `json:"MsgTime"`
-				MsgRandom  int    `json:"MsgRandom"`
+				MsgSeq     int64  `json:"MsgSeq"`
+				MsgTime    int64  `json:"MsgTime"`
+				MsgRandom  int64  `json:"MsgRandom"`
 				MsgUid     int64  `json:"MsgUid"`
 				GroupInfo  struct {
 					GroupCard    string `json:"GroupCard"`
@@ -89,6 +96,12 @@ type EventStruct struct {
 
 func (e *EventStruct) GetApiBuilder() apiBuilder.IMainFunc {
 	return apiBuilder.NewApi(e.apiUrl, e.CurrentQQ)
+}
+func (e *EventStruct) GetMsgType() int {
+	return e.CurrentPacket.EventData.MsgHead.MsgType
+}
+func (e *EventStruct) GetMsgTime() int64 {
+	return e.CurrentPacket.EventData.MsgHead.MsgTime
 }
 
 func (e *EventStruct) GetTextContent() string {
