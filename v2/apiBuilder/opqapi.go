@@ -26,7 +26,7 @@ type CgiRequest struct {
 	Images     []Md5Pic `json:"Images,omitempty"`
 	Uid        *string  `json:"Uid,omitempty"`
 	AtUinLists []struct {
-		QQUid *int64 `json:"QQUid,omitempty"`
+		QQUin *int64 `json:"QQUin,omitempty"`
 	} `json:"AtUinLists,omitempty"`
 }
 
