@@ -8,16 +8,11 @@ type ISendMsg interface {
 type IMsg interface {
 	ToUin(uin int64) IMsg
 	TextMsg(text string) IMsg
-	PicMsgWithMd5(...Md5Pic) IMsg
+	PicMsg(string, ...*File) IMsg
 	XmlMsg(xml string) IMsg
 	JsonMsg(json string) IMsg
 	At(uint ...int64) IMsg
 	DoApi
-}
-
-type Md5Pic struct {
-	FileMd5 string `json:"FileMd5,omitempty"`
-	Size    int64  `json:"Size,omitempty"`
 }
 
 func (b *Builder) SendMsg() ISendMsg {
@@ -59,10 +54,11 @@ func (b *Builder) TextMsg(text string) IMsg {
 	b.CgiRequest.Content = &text
 	return b
 }
-func (b *Builder) PicMsgWithMd5(pics ...Md5Pic) IMsg {
+func (b *Builder) PicMsg(content string, pics ...*File) IMsg {
 	if b.CgiRequest == nil {
 		b.CgiRequest = &CgiRequest{}
 	}
+	b.CgiRequest.Content = &content
 	b.CgiRequest.Images = append(b.CgiRequest.Images, pics...)
 	return b
 }

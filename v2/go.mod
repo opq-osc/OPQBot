@@ -5,6 +5,8 @@ go 1.19
 require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/imroc/req/v3 v3.33.2
+	github.com/makiuchi-d/gozxing v0.1.1
+	github.com/mdp/qrterminal/v3 v3.0.0
 )
 
 require (
@@ -26,4 +28,6 @@ require (
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/tools v0.2.0 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	rsc.io/qr v0.2.0 // indirect
 )
