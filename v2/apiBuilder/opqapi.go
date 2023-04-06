@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+type DoApi interface {
+	Do(ctx context.Context) error
+	DoAndResponse(ctx context.Context) (*Response, error)
+}
 type Builder struct {
 	qqBot      int64
 	url        string
@@ -20,87 +24,12 @@ type CgiRequest struct {
 	Content    *string  `json:"Content,omitempty"`
 	SubMsgType *int     `json:"SubMsgType,omitempty"`
 	Images     []Md5Pic `json:"Images,omitempty"`
+	Uid        *string  `json:"Uid,omitempty"`
 	AtUinLists []struct {
 		QQUid *int64 `json:"QQUid,omitempty"`
 	} `json:"AtUinLists,omitempty"`
 }
 
-func (b *Builder) SendMsg() ISendMsg {
-	cmd := "MessageSvc.PbSendMsg"
-	b.CgiCmd = &cmd
-	return b
-}
-
-func (b *Builder) FriendMsg() IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	toType := 1
-	b.CgiRequest.ToType = &toType
-	return b
-}
-
-func (b *Builder) GroupMsg() IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	toType := 2
-	b.CgiRequest.ToType = &toType
-	return b
-}
-
-func (b *Builder) ToUin(uin int64) IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	b.CgiRequest.ToUin = &uin
-	return b
-}
-
-func (b *Builder) TextMsg(text string) IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	b.CgiRequest.Content = &text
-	return b
-}
-func (b *Builder) PicMsgWithMd5(pics ...Md5Pic) IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	b.CgiRequest.Images = append(b.CgiRequest.Images, pics...)
-	return b
-}
-func (b *Builder) XmlMsg(xml string) IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	subMsgType := 12
-	b.CgiRequest.SubMsgType = &subMsgType
-	b.CgiRequest.Content = &xml
-	return b
-}
-func (b *Builder) JsonMsg(json string) IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	subMsgType := 51
-	b.CgiRequest.SubMsgType = &subMsgType
-	b.CgiRequest.Content = &json
-	return b
-}
-func (b *Builder) At(uin ...int64) IMsg {
-	if b.CgiRequest == nil {
-		b.CgiRequest = &CgiRequest{}
-	}
-	for _, v := range uin {
-		qq := struct {
-			QQUid *int64 `json:"QQUid,omitempty"`
-		}{QQUid: &v}
-		b.CgiRequest.AtUinLists = append(b.CgiRequest.AtUinLists, qq)
-	}
-	return b
-}
 func (b *Builder) BuildStringBody() (string, error) {
 	body, err := json.Marshal(b)
 	return string(body), err

@@ -9,7 +9,7 @@ type ResponseStruct struct {
 		Ret    int    `json:"Ret"`
 		ErrMsg string `json:"ErrMsg"`
 	} `json:"CgiBaseResponse"`
-	ResponseData any `json:"ResponseData,omitempty"`
+	ResponseData json.RawMessage `json:"ResponseData,omitempty"`
 }
 type Response struct {
 	originMsg []byte
@@ -27,11 +27,11 @@ func (r *Response) unmarshal() error {
 	}
 	return nil
 }
-func (r *Response) GetData() any {
+func (r *Response) GetData(data interface{}) error {
 	if err := r.unmarshal(); err != nil {
 		return err
 	}
-	return r.response.ResponseData
+	return json.Unmarshal(r.response.ResponseData, data)
 }
 func (r *Response) Ok() bool {
 	if err := r.unmarshal(); err != nil {
