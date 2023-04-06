@@ -90,8 +90,8 @@ func (b *Builder) At(uin ...int64) IMsg {
 	}
 	for _, v := range uin {
 		qq := struct {
-			QQUid *int64 `json:"QQUid,omitempty"`
-		}{QQUid: &v}
+			QQUin *int64 `json:"QQUin,omitempty"`
+		}{QQUin: &v}
 		b.CgiRequest.AtUinLists = append(b.CgiRequest.AtUinLists, qq)
 	}
 	return b
