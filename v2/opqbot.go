@@ -101,7 +101,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 				c.err = errors.NewError(err)
 				return
 			}
-			event, err := events.New(c.ApiUrl.Scheme+"://"+c.ApiUrl.Host+"/v1/LuaApiCaller", message)
+			event, err := events.New(c.ApiUrl.Scheme+"://"+c.ApiUrl.Host, message)
 			if err != nil {
 				log.Println("error:", err)
 				continue

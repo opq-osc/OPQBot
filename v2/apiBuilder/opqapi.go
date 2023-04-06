@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/imroc/req/v3"
+	"log"
+	"net/url"
 	"strconv"
 )
 
@@ -15,16 +17,20 @@ type DoApi interface {
 type Builder struct {
 	qqBot      int64
 	url        string
+	path       *string
 	CgiCmd     *string     `json:"CgiCmd,omitempty"`
 	CgiRequest *CgiRequest `json:"CgiRequest,omitempty"`
 }
 type CgiRequest struct {
-	ToUin      *int64   `json:"ToUin,omitempty"`
-	ToType     *int     `json:"ToType,omitempty"`
-	Content    *string  `json:"Content,omitempty"`
-	SubMsgType *int     `json:"SubMsgType,omitempty"`
-	Images     []Md5Pic `json:"Images,omitempty"`
-	Uid        *string  `json:"Uid,omitempty"`
+	CommandId  *int    `json:"CommandId,omitempty"`
+	FilePath   *string `json:"FilePath,omitempty"`
+	FileUrl    *string `json:"FileUrl,omitempty"`
+	ToUin      *int64  `json:"ToUin,omitempty"`
+	ToType     *int    `json:"ToType,omitempty"`
+	Content    *string `json:"Content,omitempty"`
+	SubMsgType *int    `json:"SubMsgType,omitempty"`
+	Images     []*File `json:"Images,omitempty"`
+	Uid        *string `json:"Uid,omitempty"`
 	AtUinLists []struct {
 		QQUin *int64 `json:"QQUin,omitempty"`
 	} `json:"AtUinLists,omitempty"`
@@ -50,11 +56,18 @@ func (b *Builder) DoAndResponse(ctx context.Context) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := req.SetContext(ctx).SetQueryParam("funcname", "MagicCgiCmd").SetQueryParam("qq", strconv.FormatInt(b.qqBot, 10)).SetBodyJsonString(body).Post(b.url)
+	var u string
+	if b.path != nil {
+		u, _ = url.JoinPath(b.url, *b.path)
+	} else {
+		u, _ = url.JoinPath(b.url, "/v1/LuaApiCaller")
+	}
+	resp, err := req.SetContext(ctx).SetQueryParam("funcname", "MagicCgiCmd").SetQueryParam("qq", strconv.FormatInt(b.qqBot, 10)).SetBodyJsonString(body).Post(u)
 	if err != nil {
 		return nil, err
 	}
 	r := NewResponse(resp.Bytes())
+	log.Println(resp.String())
 	if !r.Ok() {
 		return nil, fmt.Errorf(r.ErrorMsg())
 	}
