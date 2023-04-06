@@ -30,6 +30,7 @@ func (c *Core) On(event events.EventName, callback events.EventCallbackFunc) {
 	defer c.lock.Unlock()
 	c.events[event] = append(c.events[event], callback)
 }
+
 func (c *Core) closeEvent() {
 	log.Println("即将关闭")
 }
