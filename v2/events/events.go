@@ -10,12 +10,14 @@ import (
 type EventName string
 
 const (
-	EventNameNewMsg      EventName = "ON_EVENT_QQNT_NEW_MSG"
-	EventNameGroupMsg    EventName = "ON_EVENT_GROUP_NEW_MSG"
-	EventNameFriendMsg   EventName = "ON_EVENT_FRIEND_NEW_MSG"
-	EventNameGroupJoin   EventName = "ON_EVENT_GROUP_JOIN"
-	EventNameGroupExit   EventName = "ON_EVENT_GROUP_EXIT"
-	EventNameGroupInvite EventName = "ON_EVENT_GROUP_EXIT"
+	EventNameNewMsg        EventName = "ON_EVENT_QQNT_NEW_MSG"
+	EventNameGroupMsg      EventName = "ON_EVENT_GROUP_NEW_MSG"
+	EventNameFriendMsg     EventName = "ON_EVENT_FRIEND_NEW_MSG"
+	EventNameGroupJoin     EventName = "ON_EVENT_GROUP_JOIN"
+	EventNameGroupExit     EventName = "ON_EVENT_GROUP_EXIT"
+	EventNameGroupInvite   EventName = "ON_EVENT_GROUP_EXIT"
+	EventNameLoginSuccess  EventName = "ON_EVENT_LOGIN_SUCCESS"
+	EventNameNetworkChange EventName = "ON_EVENT_NETWORK_CHANGE"
 )
 
 type EventCallbackFunc func(ctx context.Context, event IEvent)
@@ -25,6 +27,7 @@ type IEvent interface {
 	GetRawBytes() []byte
 	GetEventName() EventName
 	ParseGroupMsg() IGroupMsg
+	ParseLoginSuccessEvent() ILoginSuccess
 	GetApiBuilder() apiBuilder.IMainFunc
 	ExcludeBot() IEvent
 }
@@ -39,7 +42,9 @@ type IGroupMsg interface {
 type ITextMsg interface {
 	GetTextContent() string
 }
-
+type ILoginSuccess interface {
+	GetLoginSuccessBot() (nick string, uin int64)
+}
 type ICommonMsg interface {
 	GetMsgUid() int64
 	GetMsgType() int
@@ -57,7 +62,9 @@ type EventStruct struct {
 	rawEvent      []byte
 	CurrentPacket struct {
 		EventData struct {
-			MsgHead struct {
+			Nick    *string `json:"Nick,omitempty"`
+			Uin     *int64  `json:"Uin,omitempty"`
+			MsgHead *struct {
 				FromUin    int64  `json:"FromUin"`
 				ToUin      int64  `json:"ToUin"`
 				FromType   int    `json:"FromType"`
@@ -79,8 +86,8 @@ type EventStruct struct {
 					GroupName    string `json:"GroupName"`
 				} `json:"GroupInfo"`
 				C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
-			} `json:"MsgHead"`
-			MsgBody struct {
+			} `json:"MsgHead,omitempty"`
+			MsgBody *struct {
 				SubMsgType int    `json:"SubMsgType"`
 				Content    string `json:"Content"`
 				Images     []struct {
@@ -95,13 +102,16 @@ type EventStruct struct {
 				} `json:"AtUinLists"`
 				Video interface{} `json:"Video"`
 				Voice interface{} `json:"Voice"`
-			} `json:"MsgBody"`
+			} `json:"MsgBody,omitempty"`
 		} `json:"EventData"`
 		EventName string `json:"EventName"`
 	} `json:"CurrentPacket"`
 	CurrentQQ int64 `json:"CurrentQQ"`
 }
 
+func (e *EventStruct) ParseLoginSuccessEvent() ILoginSuccess {
+	return e
+}
 func (e *EventStruct) GetAtList() (list []int64) {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
 		list = append(list, v.QQUid)
@@ -168,4 +178,9 @@ func (e *EventStruct) GetRawBytes() []byte {
 }
 func (e *EventStruct) GetEventName() EventName {
 	return EventName(e.CurrentPacket.EventName)
+}
+func (e *EventStruct) GetLoginSuccessBot() (nick string, uin int64) {
+	nick = *e.CurrentPacket.EventData.Nick
+	uin = *e.CurrentPacket.EventData.Uin
+	return
 }
