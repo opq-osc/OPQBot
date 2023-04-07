@@ -28,6 +28,7 @@ type IEvent interface {
 	GetEventName() EventName
 	ParseGroupMsg() IGroupMsg
 	ParseLoginSuccessEvent() ILoginSuccess
+	ParseNetworkChangeEvent() INetworkChange
 	GetApiBuilder() apiBuilder.IMainFunc
 	ExcludeBot() IEvent
 }
@@ -44,6 +45,9 @@ type ITextMsg interface {
 }
 type ILoginSuccess interface {
 	GetLoginSuccessBot() (nick string, uin int64)
+}
+type INetworkChange interface {
+	GetNetworkChangeBot() (nick string, uin int64, content string)
 }
 type ICommonMsg interface {
 	GetMsgUid() int64
@@ -64,6 +68,7 @@ type EventStruct struct {
 		EventData struct {
 			Nick    *string `json:"Nick,omitempty"`
 			Uin     *int64  `json:"Uin,omitempty"`
+			Content *string `json:"Content,omitempty"`
 			MsgHead *struct {
 				FromUin    int64  `json:"FromUin"`
 				ToUin      int64  `json:"ToUin"`
@@ -109,8 +114,14 @@ type EventStruct struct {
 	CurrentQQ int64 `json:"CurrentQQ"`
 }
 
+func (e *EventStruct) ParseNetworkChangeEvent() INetworkChange {
+	return e
+}
 func (e *EventStruct) ParseLoginSuccessEvent() ILoginSuccess {
 	return e
+}
+func (e *EventStruct) GetNetworkChangeBot() (nick string, uin int64, content string) {
+	return *e.CurrentPacket.EventData.Nick, *e.CurrentPacket.EventData.Uin, *e.CurrentPacket.EventData.Content
 }
 func (e *EventStruct) GetAtList() (list []int64) {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
