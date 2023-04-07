@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/opq-osc/OPQBot/v2"
+	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/events"
 	"log"
 )
@@ -12,7 +13,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	api := apiBuilder.NewApi("http://localhost:8086", 0)
+	resp, _ := api.GetClusterInfo().DoAndResponse(context.Background())
+	var info = apiBuilder.ClusterInfo{}
+	resp.GetData(&info)
+	log.Println(info)
 	core.On(events.EventNameNewMsg, func(ctx context.Context, event events.IEvent) {
 		groupMsg := event.ParseGroupMsg()
 		if groupMsg.ParseTextMsg().GetTextContent() == "test" {
