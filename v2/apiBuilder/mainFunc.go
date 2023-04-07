@@ -5,4 +5,5 @@ type IMainFunc interface {
 	QueryUin() IQueryUin
 	Qrcode() IQrcode
 	Upload() IUpload
+	GetClusterInfo() DoApi
 }

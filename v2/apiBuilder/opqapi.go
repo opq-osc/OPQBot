@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/imroc/req/v3"
-	"log"
 	"net/url"
 	"strconv"
 )
@@ -18,6 +17,7 @@ type Builder struct {
 	qqBot      int64
 	url        string
 	path       *string
+	method     *string
 	CgiCmd     *string     `json:"CgiCmd,omitempty"`
 	CgiRequest *CgiRequest `json:"CgiRequest,omitempty"`
 }
@@ -56,18 +56,25 @@ func (b *Builder) DoAndResponse(ctx context.Context) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	var u string
+	client := req.SetContext(ctx)
 	if b.path != nil {
-		u, _ = url.JoinPath(b.url, *b.path)
+		u, _ := url.JoinPath(b.url, *b.path)
+		client.SetURL(u)
 	} else {
-		u, _ = url.JoinPath(b.url, "/v1/LuaApiCaller")
+		u, _ := url.JoinPath(b.url, "/v1/LuaApiCaller")
+		client.SetURL(u)
 	}
-	resp, err := req.SetContext(ctx).SetQueryParam("funcname", "MagicCgiCmd").SetQueryParam("qq", strconv.FormatInt(b.qqBot, 10)).SetBodyJsonString(body).Post(u)
-	if err != nil {
-		return nil, err
+	if b.method != nil {
+		client.Method = *b.method
+	} else {
+		client.Method = "POST"
+	}
+
+	resp := client.SetQueryParam("funcname", "MagicCgiCmd").SetQueryParam("qq", strconv.FormatInt(b.qqBot, 10)).SetBodyJsonString(body).Do()
+	if resp.Err != nil {
+		return nil, resp.Err
 	}
 	r := NewResponse(resp.Bytes())
-	log.Println(resp.String())
 	if !r.Ok() {
 		return nil, fmt.Errorf(r.ErrorMsg())
 	}
