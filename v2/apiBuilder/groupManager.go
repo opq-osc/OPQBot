@@ -54,7 +54,7 @@ type GroupMemberLists struct {
 		Nick          string `json:"Nick"`
 		Uid           string `json:"Uid"`
 		Uin           int    `json:"Uin"`
-	} `json:"MembrLists"`
+	} `json:"MemberLists"`
 }
 
 func (b *Builder) GetGroupLists() IGroupManager {
