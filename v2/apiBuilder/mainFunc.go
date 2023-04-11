@@ -6,4 +6,5 @@ type IMainFunc interface {
 	Qrcode() IQrcode
 	Upload() IUpload
 	GetClusterInfo() DoApi
+	GroupManager() IGroupManager
 }

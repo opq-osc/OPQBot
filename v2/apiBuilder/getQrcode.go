@@ -19,9 +19,9 @@ func (b *Builder) Qrcode() IQrcode {
 }
 
 type IQrcode interface {
-	Get() errors.IError
+	Get() error
 	GetUrl() *string
-	PrintTerminal(io.Writer) errors.IError
+	PrintTerminal(io.Writer) error
 	GetImageBytes() []byte
 }
 
@@ -38,7 +38,7 @@ func (q *QrcodeStruct) GetUrl() *string {
 	return q.loginUrl
 }
 
-func (q *QrcodeStruct) PrintTerminal(writer io.Writer) errors.IError {
+func (q *QrcodeStruct) PrintTerminal(writer io.Writer) error {
 	if q.loginUrl == nil {
 		return errors.ErrorData
 	}
@@ -52,7 +52,7 @@ func (q *QrcodeStruct) PrintTerminal(writer io.Writer) errors.IError {
 	return nil
 }
 
-func (q *QrcodeStruct) Get() errors.IError {
+func (q *QrcodeStruct) Get() error {
 	resp, err := req.R().Get(q.url + "/v1/login/getqrcode")
 	if err != nil {
 		return err

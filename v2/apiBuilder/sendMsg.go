@@ -8,7 +8,7 @@ type ISendMsg interface {
 type IMsg interface {
 	ToUin(uin int64) IMsg
 	TextMsg(text string) IMsg
-	PicMsg(string, ...*File) IMsg
+	PicMsg(...*File) IMsg
 	XmlMsg(xml string) IMsg
 	JsonMsg(json string) IMsg
 	At(uint ...int64) IMsg
@@ -18,6 +18,9 @@ type IMsg interface {
 func (b *Builder) SendMsg() ISendMsg {
 	cmd := "MessageSvc.PbSendMsg"
 	b.CgiCmd = &cmd
+	if b.CgiRequest == nil {
+		b.CgiRequest = &CgiRequest{}
+	}
 	return b
 }
 
@@ -54,11 +57,10 @@ func (b *Builder) TextMsg(text string) IMsg {
 	b.CgiRequest.Content = &text
 	return b
 }
-func (b *Builder) PicMsg(content string, pics ...*File) IMsg {
+func (b *Builder) PicMsg(pics ...*File) IMsg {
 	if b.CgiRequest == nil {
 		b.CgiRequest = &CgiRequest{}
 	}
-	b.CgiRequest.Content = &content
 	b.CgiRequest.Images = append(b.CgiRequest.Images, pics...)
 	return b
 }
@@ -86,8 +88,8 @@ func (b *Builder) At(uin ...int64) IMsg {
 	}
 	for _, v := range uin {
 		qq := struct {
-			QQUin *int64 `json:"QQUin,omitempty"`
-		}{QQUin: &v}
+			Uin *int64 `json:"Uin,omitempty"`
+		}{Uin: &v}
 		b.CgiRequest.AtUinLists = append(b.CgiRequest.AtUinLists, qq)
 	}
 	return b
