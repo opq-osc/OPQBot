@@ -17,6 +17,9 @@ type QueryUinStruct struct {
 func (b *Builder) QueryUin() IQueryUin {
 	cmd := "QueryUinByUid"
 	b.CgiCmd = &cmd
+	if b.CgiRequest == nil {
+		b.CgiRequest = &CgiRequest{}
+	}
 	return b
 }
 func (b *Builder) SetUin(uid string) {

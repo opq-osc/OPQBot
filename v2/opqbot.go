@@ -2,27 +2,36 @@ package OPQBot
 
 import (
 	"context"
+	"github.com/charmbracelet/log"
 	"github.com/gorilla/websocket"
 	"github.com/opq-osc/OPQBot/v2/errors"
 	"github.com/opq-osc/OPQBot/v2/events"
-	"log"
+	"github.com/rotisserie/eris"
 	"net/url"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"sync"
 	"time"
 )
 
 type Core struct {
-	ApiUrl *url.URL
-	events map[events.EventName][]events.EventCallbackFunc
-	lock   sync.RWMutex
-	err    *errors.Error
-	client *websocket.Conn
+	ApiUrl      *url.URL
+	events      map[events.EventName][]events.EventCallbackFunc
+	lock        sync.RWMutex
+	err         error
+	client      *websocket.Conn
+	handlePanic func(any)
 
 	retryCount, MaxRetryCount int
 
 	done chan struct{}
+}
+
+func (c *Core) HandlePanic(h func(any)) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.handlePanic = h
 }
 
 func (c *Core) On(event events.EventName, callback events.EventCallbackFunc) {
@@ -32,10 +41,10 @@ func (c *Core) On(event events.EventName, callback events.EventCallbackFunc) {
 }
 
 func (c *Core) closeEvent() {
-	log.Println("即将关闭")
+	log.Info("即将关闭")
 }
 
-func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
+func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithCancel(ctx)
 	defer cancel()
@@ -44,7 +53,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 	go func() {
 		select {
 		case <-interrupt:
-			log.Println("用户关闭程序")
+			log.Info("用户关闭程序")
 			cancel()
 			if c.client != nil {
 				c.client.Close()
@@ -56,14 +65,14 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 
 	c.done = make(chan struct{}, 1)
 	defer func() {
-		log.Println(e)
+		log.Debug(e)
 		if e != errors.ErrorContextCanceled {
 			c.retryCount++
 			if c.retryCount > c.MaxRetryCount {
-				log.Printf("超出最大重连次数")
+				log.Info("超出最大重连次数")
 				return
 			}
-			log.Printf("将进行第%d重连操作,按Ctrl+C取消重试", c.retryCount)
+			log.Warnf("连接出错，将进行第%d重连操作,按Ctrl+C取消重试", c.retryCount)
 			select {
 			case <-ctx.Done():
 				return
@@ -78,7 +87,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 	var err error
 	c.client, _, err = websocket.DefaultDialer.DialContext(ctx, "ws://"+c.ApiUrl.Host+"/ws", nil)
 	if err != nil {
-		return errors.NewError(err)
+		return err
 	}
 	defer func() {
 		if c.client != nil {
@@ -86,7 +95,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 		}
 	}()
 	c.retryCount = 0
-	log.Println("连接成功")
+	log.Info("连接成功")
 	go func() {
 		defer close(c.done)
 		for {
@@ -98,20 +107,29 @@ func (c *Core) ListenAndWait(ctx context.Context) (e *errors.Error) {
 			default:
 			}
 			if err != nil {
-				c.err = errors.NewError(err)
+				c.err = err
 				return
 			}
 			event, err := events.New(c.ApiUrl.Scheme+"://"+c.ApiUrl.Host, message)
 			if err != nil {
-				log.Println("error:", err)
+				log.Error("error:", eris.ToString(err, true))
 				continue
 			}
-			log.Println(string(message))
+			log.Debug(string(message))
 			var callbacks []events.EventCallbackFunc
 			c.lock.RLock()
 			callbacks = c.events[event.GetEventName()]
 			c.lock.RUnlock()
 			go func() {
+				defer func() {
+					if err := recover(); err != nil {
+						if c.handlePanic != nil {
+							c.handlePanic(err)
+						} else {
+							log.Infof("event handle function panic: %s \n%s", err, string(debug.Stack()))
+						}
+					}
+				}()
 				for _, v := range callbacks {
 					v(ctx, event)
 				}

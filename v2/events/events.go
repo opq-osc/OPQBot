@@ -10,14 +10,21 @@ import (
 type EventName string
 
 const (
-	EventNameNewMsg        EventName = "ON_EVENT_QQNT_NEW_MSG"
-	EventNameGroupMsg      EventName = "ON_EVENT_GROUP_NEW_MSG"
-	EventNameFriendMsg     EventName = "ON_EVENT_FRIEND_NEW_MSG"
-	EventNameGroupJoin     EventName = "ON_EVENT_GROUP_JOIN"
-	EventNameGroupExit     EventName = "ON_EVENT_GROUP_EXIT"
-	EventNameGroupInvite   EventName = "ON_EVENT_GROUP_EXIT"
-	EventNameLoginSuccess  EventName = "ON_EVENT_LOGIN_SUCCESS"
-	EventNameNetworkChange EventName = "ON_EVENT_NETWORK_CHANGE"
+	EventNameNewMsg               EventName = "ON_EVENT_QQNT_NEW_MSG"
+	EventNameGroupMsg             EventName = "ON_EVENT_GROUP_NEW_MSG"
+	EventNameFriendMsg            EventName = "ON_EVENT_FRIEND_NEW_MSG"
+	EventNameGroupJoin            EventName = "ON_EVENT_GROUP_JOIN"
+	EventNameGroupExit            EventName = "ON_EVENT_GROUP_EXIT"
+	EventNameGroupInvite          EventName = "ON_EVENT_GROUP_INVITE"
+	EventNameGroupSystemMsgNotify EventName = "ON_EVENT_GROUP_SYSTEM_MSG_NOTIFY"
+	EventNameLoginSuccess         EventName = "ON_EVENT_LOGIN_SUCCESS"
+	EventNameNetworkChange        EventName = "ON_EVENT_NETWORK_CHANGE"
+)
+
+type MsgType int
+
+const (
+	MsgTypeText MsgType = 82
 )
 
 type EventCallbackFunc func(ctx context.Context, event IEvent)
@@ -39,6 +46,8 @@ type IGroupMsg interface {
 	GetGroupUin() int64
 	GetSenderUin() int64
 	ParseTextMsg() ITextMsg
+	ContainedPic() bool
+	ContainedAt() bool
 }
 type ITextMsg interface {
 	GetTextContent() string
@@ -102,8 +111,8 @@ type EventStruct struct {
 					Url      string `json:"Url"`
 				} `json:"Images"`
 				AtUinLists []struct {
-					QQNick string `json:"QQNick"`
-					QQUid  int64  `json:"QQUid"`
+					Nick string `json:"Nick"`
+					Uin  int64  `json:"Uin"`
 				} `json:"AtUinLists"`
 				Video interface{} `json:"Video"`
 				Voice interface{} `json:"Voice"`
@@ -125,13 +134,19 @@ func (e *EventStruct) GetNetworkChangeBot() (nick string, uin int64, content str
 }
 func (e *EventStruct) GetAtList() (list []int64) {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
-		list = append(list, v.QQUid)
+		list = append(list, v.Uin)
 	}
 	return list
 }
+func (e *EventStruct) ContainedPic() bool {
+	return e.CurrentPacket.EventData.MsgBody.Images != nil
+}
+func (e *EventStruct) ContainedAt() bool {
+	return e.CurrentPacket.EventData.MsgBody.AtUinLists != nil
+}
 func (e *EventStruct) AtBot() (at bool) {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
-		if v.QQUid == e.CurrentQQ {
+		if v.Uin == e.CurrentQQ {
 			at = true
 			break
 		}
@@ -140,7 +155,7 @@ func (e *EventStruct) AtBot() (at bool) {
 }
 func (e *EventStruct) ExcludeAtInfo() IGroupMsg {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
-		e.CurrentPacket.EventData.MsgBody.Content = strings.ReplaceAll(e.CurrentPacket.EventData.MsgBody.Content, "@"+v.QQNick, "")
+		e.CurrentPacket.EventData.MsgBody.Content = strings.ReplaceAll(e.CurrentPacket.EventData.MsgBody.Content, "@"+v.Nick, "")
 	}
 	e.CurrentPacket.EventData.MsgBody.Content = strings.TrimSpace(e.CurrentPacket.EventData.MsgBody.Content)
 	return e

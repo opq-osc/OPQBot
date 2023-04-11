@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/imroc/req/v3"
 	"net/url"
 	"strconv"
@@ -22,8 +23,15 @@ type Builder struct {
 	CgiRequest *CgiRequest `json:"CgiRequest,omitempty"`
 }
 type CgiRequest struct {
+	OpCode     *int    `json:"OpCode,omitempty"`
+	MsgSeq     *int64  `json:"MsgSeq,omitempty"`
+	MsgType    *int    `json:"MsgType,omitempty"`
+	GroupCode  *int64  `json:"GroupCode,omitempty"`
+	Uin        *int64  `json:"Uin,omitempty"`
+	LastBuffer *string `json:"LastBuffer,omitempty"`
 	CommandId  *int    `json:"CommandId,omitempty"`
 	FilePath   *string `json:"FilePath,omitempty"`
+	Base64Buf  *string `json:"Base64Buf,omitempty"`
 	FileUrl    *string `json:"FileUrl,omitempty"`
 	ToUin      *int64  `json:"ToUin,omitempty"`
 	ToType     *int    `json:"ToType,omitempty"`
@@ -32,7 +40,7 @@ type CgiRequest struct {
 	Images     []*File `json:"Images,omitempty"`
 	Uid        *string `json:"Uid,omitempty"`
 	AtUinLists []struct {
-		QQUin *int64 `json:"QQUin,omitempty"`
+		Uin *int64 `json:"Uin,omitempty"`
 	} `json:"AtUinLists,omitempty"`
 }
 
@@ -56,6 +64,7 @@ func (b *Builder) DoAndResponse(ctx context.Context) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Debug("request", "body", body)
 	client := req.SetContext(ctx)
 	if b.path != nil {
 		u, _ := url.JoinPath(b.url, *b.path)

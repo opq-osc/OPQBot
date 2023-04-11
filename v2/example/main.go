@@ -2,36 +2,42 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"github.com/charmbracelet/log"
+	_ "github.com/mcoo/OPQBot/session/provider"
 	"github.com/opq-osc/OPQBot/v2"
-	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/events"
-	"log"
 )
 
 func main() {
+	log.SetLevel(log.DebugLevel)
+	log.SetReportCaller(true)
 	core, err := OPQBot.NewCore("http://localhost:8086", 10)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	api := apiBuilder.NewApi("http://localhost:8086", 0)
-	resp, _ := api.GetClusterInfo().DoAndResponse(context.Background())
-	var info = apiBuilder.ClusterInfo{}
-	resp.GetData(&info)
-	log.Println(info)
-	core.On(events.EventNameNewMsg, func(ctx context.Context, event events.IEvent) {
+	core.On(events.EventNameGroupMsg, func(ctx context.Context, event events.IEvent) {
 		groupMsg := event.ParseGroupMsg()
-		if groupMsg.ParseTextMsg().GetTextContent() == "test" {
-			//qr := event.GetApiBuilder().Qrcode()
-			//qr.Get()
-			//var buf bytes.Buffer
-			//qr.PrintTerminal(&buf)
-			pic, err := event.GetApiBuilder().Upload().SetFilePath(`F:\project\OPQBot\v2\example\img\opq.logo-only.min.png`).DoUpload(ctx)
-			if err != nil {
-				log.Println(pic)
-				return
+		if groupMsg.GetMsgType() == 82 && groupMsg.AtBot() {
+			text := groupMsg.ExcludeAtInfo().ParseTextMsg().GetTextContent()
+			if text == "login" {
+				qr := event.GetApiBuilder().Qrcode()
+				err := qr.Get()
+				if err != nil {
+					log.Error(err)
+				}
+				pic, err := event.GetApiBuilder().Upload().GroupPic().SetBase64Buf(base64.StdEncoding.EncodeToString(qr.GetImageBytes())).DoUpload(ctx)
+				if err != nil {
+					log.Error(err)
+				}
+				err = event.GetApiBuilder().SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).PicMsg(pic).Do(ctx)
+				if err != nil {
+					log.Error(err)
+				}
 			}
-			event.GetApiBuilder().SendMsg().GroupMsg().PicMsg("test", pic).ToUin(groupMsg.GetGroupUin()).Do(ctx)
+
 		}
+
 	})
 	err = core.ListenAndWait(context.Background())
 	if err != nil {
