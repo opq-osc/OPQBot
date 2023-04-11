@@ -7,4 +7,5 @@ type IMainFunc interface {
 	Upload() IUpload
 	GetClusterInfo() DoApi
 	GroupManager() IGroupManager
+	FriendManager() IFriendManager
 }

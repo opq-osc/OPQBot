@@ -23,6 +23,7 @@ type Builder struct {
 	CgiRequest *CgiRequest `json:"CgiRequest,omitempty"`
 }
 type CgiRequest struct {
+	LastUin    *int64  `json:"LastUin,omitempty"`
 	OpCode     *int    `json:"OpCode,omitempty"`
 	MsgSeq     *int64  `json:"MsgSeq,omitempty"`
 	MsgType    *int    `json:"MsgType,omitempty"`
