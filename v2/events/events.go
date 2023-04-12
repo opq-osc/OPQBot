@@ -10,7 +10,6 @@ import (
 type EventName string
 
 const (
-	EventNameNewMsg               EventName = "ON_EVENT_QQNT_NEW_MSG"
 	EventNameGroupMsg             EventName = "ON_EVENT_GROUP_NEW_MSG"
 	EventNameFriendMsg            EventName = "ON_EVENT_FRIEND_NEW_MSG"
 	EventNameGroupJoin            EventName = "ON_EVENT_GROUP_JOIN"
@@ -24,12 +23,28 @@ const (
 type MsgType int
 
 const (
-	MsgTypeText MsgType = 82
+	// MsgTypeGroupMsg 	收到群消息
+	MsgTypeGroupMsg MsgType = 82
+	// MsgTypeFriendsMsg 	收到好友私聊消息
+	MsgTypeFriendsMsg MsgType = 166
+	// MsgTypeGroupJoin 有人进群了
+	MsgTypeGroupJoin MsgType = 33
+	// MsgTypeGroupExit 有人退群了
+	MsgTypeGroupExit MsgType = 34
+	/*
+	  1. 发出去消息的回应
+	  2. 有人撤回消息
+	  3. 自己被邀请入群
+	*/
+	MsgTypeMsgSent MsgType = 732
+	// MsgTypeGroupChange 自己的群名片被改了
+	MsgTypeGroupChange MsgType = 528
 )
 
 type EventCallbackFunc func(ctx context.Context, event IEvent)
 
 type IEvent interface {
+	ICommonMsg
 	GetCurrentQQ() int64
 	GetRawBytes() []byte
 	GetEventName() EventName
@@ -60,7 +75,7 @@ type INetworkChange interface {
 }
 type ICommonMsg interface {
 	GetMsgUid() int64
-	GetMsgType() int
+	GetMsgType() MsgType
 	GetMsgTime() int64
 }
 
@@ -174,8 +189,8 @@ func (e *EventStruct) GetSenderUin() int64 {
 func (e *EventStruct) GetApiBuilder() apiBuilder.IMainFunc {
 	return apiBuilder.NewApi(e.apiUrl, e.CurrentQQ)
 }
-func (e *EventStruct) GetMsgType() int {
-	return e.CurrentPacket.EventData.MsgHead.MsgType
+func (e *EventStruct) GetMsgType() MsgType {
+	return MsgType(e.CurrentPacket.EventData.MsgHead.MsgType)
 }
 func (e *EventStruct) GetMsgTime() int64 {
 	return e.CurrentPacket.EventData.MsgHead.MsgTime
