@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/websocket"
+	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/errors"
 	"github.com/opq-osc/OPQBot/v2/events"
 	"github.com/rotisserie/eris"
@@ -16,13 +17,13 @@ import (
 )
 
 type Core struct {
-	ApiUrl      *url.URL
-	events      map[events.EventName][]events.EventCallbackFunc
-	lock        sync.RWMutex
-	err         error
-	client      *websocket.Conn
-	handlePanic func(any)
-
+	ApiUrl                    *url.URL
+	events                    map[events.EventName][]events.EventCallbackFunc
+	lock                      sync.RWMutex
+	err                       error
+	client                    *websocket.Conn
+	handlePanic               func(any)
+	middleCallFunc            []func(builder *apiBuilder.Builder) bool
 	retryCount, MaxRetryCount int
 
 	done chan struct{}
@@ -110,7 +111,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 				c.err = err
 				return
 			}
-			event, err := events.New(c.ApiUrl.Scheme+"://"+c.ApiUrl.Host, message)
+			event, err := events.New(c.ApiUrl.Scheme+"://"+c.ApiUrl.Host, message, c.middleCallFunc...)
 			if err != nil {
 				log.Error("error:", eris.ToString(err, true))
 				continue
@@ -144,16 +145,17 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 	return c.err
 }
 
-func NewCore(api string, maxRetryCount int) (*Core, error) {
+func NewCore(api string, maxRetryCount int, middleCallFunc ...func(builder *apiBuilder.Builder) bool) (*Core, error) {
 	u, err := url.Parse(api)
 	if err != nil {
 		return nil, err
 	}
 	return &Core{
-		ApiUrl:        u,
-		events:        make(map[events.EventName][]events.EventCallbackFunc),
-		lock:          sync.RWMutex{},
-		done:          nil,
-		MaxRetryCount: maxRetryCount,
+		ApiUrl:         u,
+		events:         make(map[events.EventName][]events.EventCallbackFunc),
+		lock:           sync.RWMutex{},
+		done:           nil,
+		MaxRetryCount:  maxRetryCount,
+		middleCallFunc: middleCallFunc,
 	}, nil
 }

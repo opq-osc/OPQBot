@@ -19,6 +19,7 @@ type Builder struct {
 	url        string
 	path       *string
 	method     *string
+	middleFunc []func(*Builder) bool
 	CgiCmd     *string     `json:"CgiCmd,omitempty"`
 	CgiRequest *CgiRequest `json:"CgiRequest,omitempty"`
 }
@@ -61,6 +62,14 @@ func (b *Builder) Do(ctx context.Context) error {
 	return nil
 }
 func (b *Builder) DoAndResponse(ctx context.Context) (*Response, error) {
+	if b.middleFunc != nil {
+		for _, v := range b.middleFunc {
+			if !v(b) {
+				return nil, fmt.Errorf("middler canceled")
+			}
+		}
+	}
+
 	body, err := b.BuildStringBody()
 	if err != nil {
 		return nil, err
@@ -91,6 +100,6 @@ func (b *Builder) DoAndResponse(ctx context.Context) (*Response, error) {
 	return r, nil
 }
 
-func NewApi(url string, botQQ int64) IMainFunc {
-	return &Builder{qqBot: botQQ, url: url}
+func NewApi(url string, botQQ int64, middles ...func(*Builder) bool) IMainFunc {
+	return &Builder{qqBot: botQQ, url: url, middleFunc: middles}
 }

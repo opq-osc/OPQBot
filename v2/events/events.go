@@ -79,16 +79,17 @@ type ICommonMsg interface {
 	GetMsgTime() int64
 }
 
-func New(apiUrl string, data []byte) (IEvent, error) {
-	event := &EventStruct{apiUrl: apiUrl}
+func New(apiUrl string, data []byte, middleCallFunc ...func(*apiBuilder.Builder) bool) (IEvent, error) {
+	event := &EventStruct{apiUrl: apiUrl, middleCallFunc: middleCallFunc}
 	event.rawEvent = data
 	return event, json.Unmarshal(data, event)
 }
 
 type EventStruct struct {
-	apiUrl        string
-	rawEvent      []byte
-	CurrentPacket struct {
+	middleCallFunc []func(builder *apiBuilder.Builder) bool
+	apiUrl         string
+	rawEvent       []byte
+	CurrentPacket  struct {
 		EventData struct {
 			Nick    *string `json:"Nick,omitempty"`
 			Uin     *int64  `json:"Uin,omitempty"`
@@ -187,7 +188,7 @@ func (e *EventStruct) GetSenderUin() int64 {
 	return e.CurrentPacket.EventData.MsgHead.SenderUin
 }
 func (e *EventStruct) GetApiBuilder() apiBuilder.IMainFunc {
-	return apiBuilder.NewApi(e.apiUrl, e.CurrentQQ)
+	return apiBuilder.NewApi(e.apiUrl, e.CurrentQQ, e.middleCallFunc...)
 }
 func (e *EventStruct) GetMsgType() MsgType {
 	return MsgType(e.CurrentPacket.EventData.MsgHead.MsgType)
