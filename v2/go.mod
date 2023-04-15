@@ -10,7 +10,6 @@ require (
 	github.com/mcoo/OPQBot v0.2.1
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/rotisserie/eris v0.5.4
-	github.com/sashabaranov/go-openai v1.6.1
 )
 
 require (
@@ -37,9 +36,9 @@ require (
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db // indirect
 	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/tools v0.2.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	rsc.io/qr v0.2.0 // indirect
