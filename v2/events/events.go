@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"encoding/json"
-	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"strings"
 )
 
@@ -51,7 +50,6 @@ type IEvent interface {
 	ParseGroupMsg() IGroupMsg
 	ParseLoginSuccessEvent() ILoginSuccess
 	ParseNetworkChangeEvent() INetworkChange
-	GetApiBuilder() apiBuilder.IMainFunc
 	ExcludeBot() IEvent
 }
 type IGroupMsg interface {
@@ -79,17 +77,22 @@ type ICommonMsg interface {
 	GetMsgTime() int64
 }
 
-func New(apiUrl string, data []byte, middleCallFunc ...func(*apiBuilder.Builder) bool) (IEvent, error) {
-	event := &EventStruct{apiUrl: apiUrl, middleCallFunc: middleCallFunc}
+func New(data []byte) (IEvent, error) {
+	event := &EventStruct{}
+	err := event.UnmarshalJSON(data)
+	if err != nil {
+		return nil, err
+	}
 	event.rawEvent = data
 	return event, json.Unmarshal(data, event)
 }
 
+//go:generate easyjson events.go
+
+//easyjson:json
 type EventStruct struct {
-	middleCallFunc []func(builder *apiBuilder.Builder) bool
-	apiUrl         string
-	rawEvent       []byte
-	CurrentPacket  struct {
+	rawEvent      []byte
+	CurrentPacket struct {
 		EventData struct {
 			Nick    *string `json:"Nick,omitempty"`
 			Uin     *int64  `json:"Uin,omitempty"`
@@ -186,9 +189,6 @@ func (e *EventStruct) ExcludeBot() IEvent {
 }
 func (e *EventStruct) GetSenderUin() int64 {
 	return e.CurrentPacket.EventData.MsgHead.SenderUin
-}
-func (e *EventStruct) GetApiBuilder() apiBuilder.IMainFunc {
-	return apiBuilder.NewApi(e.apiUrl, e.CurrentQQ, e.middleCallFunc...)
 }
 func (e *EventStruct) GetMsgType() MsgType {
 	return MsgType(e.CurrentPacket.EventData.MsgHead.MsgType)

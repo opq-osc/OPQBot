@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/websocket"
-	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/errors"
 	"github.com/opq-osc/OPQBot/v2/events"
 	"github.com/rotisserie/eris"
@@ -23,7 +22,6 @@ type Core struct {
 	err                       error
 	client                    *websocket.Conn
 	handlePanic               func(any)
-	middleCallFunc            []func(builder *apiBuilder.Builder) bool
 	retryCount, MaxRetryCount int
 
 	done chan struct{}
@@ -41,10 +39,6 @@ func (c *Core) On(event events.EventName, callback events.EventCallbackFunc) {
 	c.events[event] = append(c.events[event], callback)
 }
 
-func (c *Core) closeEvent() {
-	log.Info("即将关闭")
-}
-
 func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithCancel(ctx)
@@ -59,7 +53,6 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 			if c.client != nil {
 				c.client.Close()
 			}
-
 		case <-ctx.Done():
 		}
 	}()
@@ -83,7 +76,6 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 			e = c.ListenAndWait(ctx)
 			return
 		}
-		c.closeEvent()
 	}()
 	var err error
 	c.client, _, err = websocket.DefaultDialer.DialContext(ctx, "ws://"+c.ApiUrl.Host+"/ws", nil)
@@ -111,7 +103,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 				c.err = err
 				return
 			}
-			event, err := events.New(c.ApiUrl.Scheme+"://"+c.ApiUrl.Host, message, c.middleCallFunc...)
+			event, err := events.New(message)
 			if err != nil {
 				log.Error("error:", eris.ToString(err, true))
 				continue
@@ -145,17 +137,28 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 	return c.err
 }
 
-func NewCore(api string, maxRetryCount int, middleCallFunc ...func(builder *apiBuilder.Builder) bool) (*Core, error) {
+type CoreOpt func(*Core)
+
+func WithMaxRetryCount(maxCount int) CoreOpt {
+	return func(c *Core) {
+		c.MaxRetryCount = maxCount
+	}
+}
+
+func NewCore(api string, opt ...CoreOpt) (*Core, error) {
 	u, err := url.Parse(api)
 	if err != nil {
 		return nil, err
 	}
-	return &Core{
-		ApiUrl:         u,
-		events:         make(map[events.EventName][]events.EventCallbackFunc),
-		lock:           sync.RWMutex{},
-		done:           nil,
-		MaxRetryCount:  maxRetryCount,
-		middleCallFunc: middleCallFunc,
-	}, nil
+	c := &Core{
+		ApiUrl:        u,
+		events:        make(map[events.EventName][]events.EventCallbackFunc),
+		lock:          sync.RWMutex{},
+		done:          nil,
+		MaxRetryCount: 10,
+	}
+	for _, v := range opt {
+		v(c)
+	}
+	return c, nil
 }

@@ -9,20 +9,12 @@ import (
 	"github.com/opq-osc/OPQBot/v2/events"
 )
 
+const apiUrl = "http://localhost:8086"
+
 func main() {
 	log.SetLevel(log.DebugLevel)
 	log.SetReportCaller(true)
-	core, err := OPQBot.NewCore("http://localhost:8086", 10, func(builder *apiBuilder.Builder) bool {
-		if *builder.CgiRequest.Content == "test" {
-			content := "replaced"
-			builder.CgiRequest.Content = &content
-		}
-		if *builder.CgiRequest.Content == "拦截" {
-			log.Error("已拦截")
-			return false
-		}
-		return true
-	})
+	core, err := OPQBot.NewCore(apiUrl, OPQBot.WithMaxRetryCount(5))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,10 +24,7 @@ func main() {
 			if groupMsg.AtBot() {
 				text := groupMsg.ExcludeAtInfo().ParseTextMsg().GetTextContent()
 				if text == "test" {
-					event.GetApiBuilder().SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("test").Do(ctx)
-				}
-				if text == "拦截" {
-					event.GetApiBuilder().SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("拦截").Do(ctx)
+					apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("test").Do(ctx)
 				}
 			}
 		}
