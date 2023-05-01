@@ -56,7 +56,10 @@ type IGroupMsg interface {
 	ICommonMsg
 	ExcludeAtInfo() IGroupMsg
 	AtBot() bool
+	GetAtInfo() []UserInfo
 	GetGroupUin() int64
+	GetGroupInfo() GroupInfo
+	GetSenderNick() string
 	GetSenderUin() int64
 	ParseTextMsg() ITextMsg
 	ContainedPic() bool
@@ -89,6 +92,20 @@ func New(data []byte) (IEvent, error) {
 
 //go:generate easyjson events.go
 
+type GroupInfo struct {
+	GroupCard    string `json:"GroupCard"`
+	GroupCode    int    `json:"GroupCode"`
+	GroupInfoSeq int    `json:"GroupInfoSeq"`
+	GroupLevel   int    `json:"GroupLevel"`
+	GroupRank    int    `json:"GroupRank"`
+	GroupType    int    `json:"GroupType"`
+	GroupName    string `json:"GroupName"`
+}
+type UserInfo struct {
+	Nick string `json:"Nick"`
+	Uin  int64  `json:"Uin"`
+}
+
 //easyjson:json
 type EventStruct struct {
 	rawEvent      []byte
@@ -98,26 +115,18 @@ type EventStruct struct {
 			Uin     *int64  `json:"Uin,omitempty"`
 			Content *string `json:"Content,omitempty"`
 			MsgHead *struct {
-				FromUin    int64  `json:"FromUin"`
-				ToUin      int64  `json:"ToUin"`
-				FromType   int    `json:"FromType"`
-				SenderUin  int64  `json:"SenderUin"`
-				SenderNick string `json:"SenderNick"`
-				MsgType    int    `json:"MsgType"`
-				C2CCmd     int    `json:"C2cCmd"`
-				MsgSeq     int64  `json:"MsgSeq"`
-				MsgTime    int64  `json:"MsgTime"`
-				MsgRandom  int64  `json:"MsgRandom"`
-				MsgUid     int64  `json:"MsgUid"`
-				GroupInfo  struct {
-					GroupCard    string `json:"GroupCard"`
-					GroupCode    int    `json:"GroupCode"`
-					GroupInfoSeq int    `json:"GroupInfoSeq"`
-					GroupLevel   int    `json:"GroupLevel"`
-					GroupRank    int    `json:"GroupRank"`
-					GroupType    int    `json:"GroupType"`
-					GroupName    string `json:"GroupName"`
-				} `json:"GroupInfo"`
+				FromUin            int64       `json:"FromUin"`
+				ToUin              int64       `json:"ToUin"`
+				FromType           int         `json:"FromType"`
+				SenderUin          int64       `json:"SenderUin"`
+				SenderNick         string      `json:"SenderNick"`
+				MsgType            int         `json:"MsgType"`
+				C2CCmd             int         `json:"C2cCmd"`
+				MsgSeq             int64       `json:"MsgSeq"`
+				MsgTime            int64       `json:"MsgTime"`
+				MsgRandom          int64       `json:"MsgRandom"`
+				MsgUid             int64       `json:"MsgUid"`
+				GroupInfo          GroupInfo   `json:"GroupInfo"`
 				C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 			} `json:"MsgHead,omitempty"`
 			MsgBody *struct {
@@ -129,12 +138,9 @@ type EventStruct struct {
 					FileSize int    `json:"FileSize"`
 					Url      string `json:"Url"`
 				} `json:"Images"`
-				AtUinLists []struct {
-					Nick string `json:"Nick"`
-					Uin  int64  `json:"Uin"`
-				} `json:"AtUinLists"`
-				Video interface{} `json:"Video"`
-				Voice interface{} `json:"Voice"`
+				AtUinLists []UserInfo  `json:"AtUinLists"`
+				Video      interface{} `json:"Video"`
+				Voice      interface{} `json:"Voice"`
 			} `json:"MsgBody,omitempty"`
 		} `json:"EventData"`
 		EventName string `json:"EventName"`
@@ -172,6 +178,9 @@ func (e *EventStruct) AtBot() (at bool) {
 	}
 	return at
 }
+func (e *EventStruct) GetAtInfo() []UserInfo {
+	return e.CurrentPacket.EventData.MsgBody.AtUinLists
+}
 func (e *EventStruct) ExcludeAtInfo() IGroupMsg {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
 		e.CurrentPacket.EventData.MsgBody.Content = strings.ReplaceAll(e.CurrentPacket.EventData.MsgBody.Content, "@"+v.Nick, "")
@@ -190,6 +199,10 @@ func (e *EventStruct) ExcludeBot() IEvent {
 func (e *EventStruct) GetSenderUin() int64 {
 	return e.CurrentPacket.EventData.MsgHead.SenderUin
 }
+func (e *EventStruct) GetSenderNick() string {
+	return e.CurrentPacket.EventData.MsgHead.SenderNick
+}
+
 func (e *EventStruct) GetMsgType() MsgType {
 	return MsgType(e.CurrentPacket.EventData.MsgHead.MsgType)
 }
@@ -211,6 +224,9 @@ func (e *EventStruct) GetMsgUid() int64 {
 }
 func (e *EventStruct) GetGroupUin() int64 {
 	return e.CurrentPacket.EventData.MsgHead.FromUin
+}
+func (e *EventStruct) GetGroupInfo() GroupInfo {
+	return e.CurrentPacket.EventData.MsgHead.GroupInfo
 }
 func (e *EventStruct) GetCurrentQQ() int64 {
 	return e.CurrentQQ

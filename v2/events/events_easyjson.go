@@ -96,26 +96,18 @@ func easyjson692db02bDecode(in *jlexer.Lexer, out *struct {
 		Uin     *int64  `json:"Uin,omitempty"`
 		Content *string `json:"Content,omitempty"`
 		MsgHead *struct {
-			FromUin    int64  `json:"FromUin"`
-			ToUin      int64  `json:"ToUin"`
-			FromType   int    `json:"FromType"`
-			SenderUin  int64  `json:"SenderUin"`
-			SenderNick string `json:"SenderNick"`
-			MsgType    int    `json:"MsgType"`
-			C2CCmd     int    `json:"C2cCmd"`
-			MsgSeq     int64  `json:"MsgSeq"`
-			MsgTime    int64  `json:"MsgTime"`
-			MsgRandom  int64  `json:"MsgRandom"`
-			MsgUid     int64  `json:"MsgUid"`
-			GroupInfo  struct {
-				GroupCard    string `json:"GroupCard"`
-				GroupCode    int    `json:"GroupCode"`
-				GroupInfoSeq int    `json:"GroupInfoSeq"`
-				GroupLevel   int    `json:"GroupLevel"`
-				GroupRank    int    `json:"GroupRank"`
-				GroupType    int    `json:"GroupType"`
-				GroupName    string `json:"GroupName"`
-			} `json:"GroupInfo"`
+			FromUin            int64       `json:"FromUin"`
+			ToUin              int64       `json:"ToUin"`
+			FromType           int         `json:"FromType"`
+			SenderUin          int64       `json:"SenderUin"`
+			SenderNick         string      `json:"SenderNick"`
+			MsgType            int         `json:"MsgType"`
+			C2CCmd             int         `json:"C2cCmd"`
+			MsgSeq             int64       `json:"MsgSeq"`
+			MsgTime            int64       `json:"MsgTime"`
+			MsgRandom          int64       `json:"MsgRandom"`
+			MsgUid             int64       `json:"MsgUid"`
+			GroupInfo          GroupInfo   `json:"GroupInfo"`
 			C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 		} `json:"MsgHead,omitempty"`
 		MsgBody *struct {
@@ -127,12 +119,9 @@ func easyjson692db02bDecode(in *jlexer.Lexer, out *struct {
 				FileSize int    `json:"FileSize"`
 				Url      string `json:"Url"`
 			} `json:"Images"`
-			AtUinLists []struct {
-				Nick string `json:"Nick"`
-				Uin  int64  `json:"Uin"`
-			} `json:"AtUinLists"`
-			Video interface{} `json:"Video"`
-			Voice interface{} `json:"Voice"`
+			AtUinLists []UserInfo  `json:"AtUinLists"`
+			Video      interface{} `json:"Video"`
+			Voice      interface{} `json:"Voice"`
 		} `json:"MsgBody,omitempty"`
 	} `json:"EventData"`
 	EventName string `json:"EventName"`
@@ -175,26 +164,18 @@ func easyjson692db02bEncode(out *jwriter.Writer, in struct {
 		Uin     *int64  `json:"Uin,omitempty"`
 		Content *string `json:"Content,omitempty"`
 		MsgHead *struct {
-			FromUin    int64  `json:"FromUin"`
-			ToUin      int64  `json:"ToUin"`
-			FromType   int    `json:"FromType"`
-			SenderUin  int64  `json:"SenderUin"`
-			SenderNick string `json:"SenderNick"`
-			MsgType    int    `json:"MsgType"`
-			C2CCmd     int    `json:"C2cCmd"`
-			MsgSeq     int64  `json:"MsgSeq"`
-			MsgTime    int64  `json:"MsgTime"`
-			MsgRandom  int64  `json:"MsgRandom"`
-			MsgUid     int64  `json:"MsgUid"`
-			GroupInfo  struct {
-				GroupCard    string `json:"GroupCard"`
-				GroupCode    int    `json:"GroupCode"`
-				GroupInfoSeq int    `json:"GroupInfoSeq"`
-				GroupLevel   int    `json:"GroupLevel"`
-				GroupRank    int    `json:"GroupRank"`
-				GroupType    int    `json:"GroupType"`
-				GroupName    string `json:"GroupName"`
-			} `json:"GroupInfo"`
+			FromUin            int64       `json:"FromUin"`
+			ToUin              int64       `json:"ToUin"`
+			FromType           int         `json:"FromType"`
+			SenderUin          int64       `json:"SenderUin"`
+			SenderNick         string      `json:"SenderNick"`
+			MsgType            int         `json:"MsgType"`
+			C2CCmd             int         `json:"C2cCmd"`
+			MsgSeq             int64       `json:"MsgSeq"`
+			MsgTime            int64       `json:"MsgTime"`
+			MsgRandom          int64       `json:"MsgRandom"`
+			MsgUid             int64       `json:"MsgUid"`
+			GroupInfo          GroupInfo   `json:"GroupInfo"`
 			C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 		} `json:"MsgHead,omitempty"`
 		MsgBody *struct {
@@ -206,12 +187,9 @@ func easyjson692db02bEncode(out *jwriter.Writer, in struct {
 				FileSize int    `json:"FileSize"`
 				Url      string `json:"Url"`
 			} `json:"Images"`
-			AtUinLists []struct {
-				Nick string `json:"Nick"`
-				Uin  int64  `json:"Uin"`
-			} `json:"AtUinLists"`
-			Video interface{} `json:"Video"`
-			Voice interface{} `json:"Voice"`
+			AtUinLists []UserInfo  `json:"AtUinLists"`
+			Video      interface{} `json:"Video"`
+			Voice      interface{} `json:"Voice"`
 		} `json:"MsgBody,omitempty"`
 	} `json:"EventData"`
 	EventName string `json:"EventName"`
@@ -236,26 +214,18 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 	Uin     *int64  `json:"Uin,omitempty"`
 	Content *string `json:"Content,omitempty"`
 	MsgHead *struct {
-		FromUin    int64  `json:"FromUin"`
-		ToUin      int64  `json:"ToUin"`
-		FromType   int    `json:"FromType"`
-		SenderUin  int64  `json:"SenderUin"`
-		SenderNick string `json:"SenderNick"`
-		MsgType    int    `json:"MsgType"`
-		C2CCmd     int    `json:"C2cCmd"`
-		MsgSeq     int64  `json:"MsgSeq"`
-		MsgTime    int64  `json:"MsgTime"`
-		MsgRandom  int64  `json:"MsgRandom"`
-		MsgUid     int64  `json:"MsgUid"`
-		GroupInfo  struct {
-			GroupCard    string `json:"GroupCard"`
-			GroupCode    int    `json:"GroupCode"`
-			GroupInfoSeq int    `json:"GroupInfoSeq"`
-			GroupLevel   int    `json:"GroupLevel"`
-			GroupRank    int    `json:"GroupRank"`
-			GroupType    int    `json:"GroupType"`
-			GroupName    string `json:"GroupName"`
-		} `json:"GroupInfo"`
+		FromUin            int64       `json:"FromUin"`
+		ToUin              int64       `json:"ToUin"`
+		FromType           int         `json:"FromType"`
+		SenderUin          int64       `json:"SenderUin"`
+		SenderNick         string      `json:"SenderNick"`
+		MsgType            int         `json:"MsgType"`
+		C2CCmd             int         `json:"C2cCmd"`
+		MsgSeq             int64       `json:"MsgSeq"`
+		MsgTime            int64       `json:"MsgTime"`
+		MsgRandom          int64       `json:"MsgRandom"`
+		MsgUid             int64       `json:"MsgUid"`
+		GroupInfo          GroupInfo   `json:"GroupInfo"`
 		C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 	} `json:"MsgHead,omitempty"`
 	MsgBody *struct {
@@ -267,12 +237,9 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 			FileSize int    `json:"FileSize"`
 			Url      string `json:"Url"`
 		} `json:"Images"`
-		AtUinLists []struct {
-			Nick string `json:"Nick"`
-			Uin  int64  `json:"Uin"`
-		} `json:"AtUinLists"`
-		Video interface{} `json:"Video"`
-		Voice interface{} `json:"Voice"`
+		AtUinLists []UserInfo  `json:"AtUinLists"`
+		Video      interface{} `json:"Video"`
+		Voice      interface{} `json:"Voice"`
 	} `json:"MsgBody,omitempty"`
 }) {
 	isTopLevel := in.IsStart()
@@ -330,26 +297,18 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 			} else {
 				if out.MsgHead == nil {
 					out.MsgHead = new(struct {
-						FromUin    int64  `json:"FromUin"`
-						ToUin      int64  `json:"ToUin"`
-						FromType   int    `json:"FromType"`
-						SenderUin  int64  `json:"SenderUin"`
-						SenderNick string `json:"SenderNick"`
-						MsgType    int    `json:"MsgType"`
-						C2CCmd     int    `json:"C2cCmd"`
-						MsgSeq     int64  `json:"MsgSeq"`
-						MsgTime    int64  `json:"MsgTime"`
-						MsgRandom  int64  `json:"MsgRandom"`
-						MsgUid     int64  `json:"MsgUid"`
-						GroupInfo  struct {
-							GroupCard    string `json:"GroupCard"`
-							GroupCode    int    `json:"GroupCode"`
-							GroupInfoSeq int    `json:"GroupInfoSeq"`
-							GroupLevel   int    `json:"GroupLevel"`
-							GroupRank    int    `json:"GroupRank"`
-							GroupType    int    `json:"GroupType"`
-							GroupName    string `json:"GroupName"`
-						} `json:"GroupInfo"`
+						FromUin            int64       `json:"FromUin"`
+						ToUin              int64       `json:"ToUin"`
+						FromType           int         `json:"FromType"`
+						SenderUin          int64       `json:"SenderUin"`
+						SenderNick         string      `json:"SenderNick"`
+						MsgType            int         `json:"MsgType"`
+						C2CCmd             int         `json:"C2cCmd"`
+						MsgSeq             int64       `json:"MsgSeq"`
+						MsgTime            int64       `json:"MsgTime"`
+						MsgRandom          int64       `json:"MsgRandom"`
+						MsgUid             int64       `json:"MsgUid"`
+						GroupInfo          GroupInfo   `json:"GroupInfo"`
 						C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 					})
 				}
@@ -370,12 +329,9 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 							FileSize int    `json:"FileSize"`
 							Url      string `json:"Url"`
 						} `json:"Images"`
-						AtUinLists []struct {
-							Nick string `json:"Nick"`
-							Uin  int64  `json:"Uin"`
-						} `json:"AtUinLists"`
-						Video interface{} `json:"Video"`
-						Voice interface{} `json:"Voice"`
+						AtUinLists []UserInfo  `json:"AtUinLists"`
+						Video      interface{} `json:"Video"`
+						Voice      interface{} `json:"Voice"`
 					})
 				}
 				easyjson692db02bDecode3(in, out.MsgBody)
@@ -395,26 +351,18 @@ func easyjson692db02bEncode1(out *jwriter.Writer, in struct {
 	Uin     *int64  `json:"Uin,omitempty"`
 	Content *string `json:"Content,omitempty"`
 	MsgHead *struct {
-		FromUin    int64  `json:"FromUin"`
-		ToUin      int64  `json:"ToUin"`
-		FromType   int    `json:"FromType"`
-		SenderUin  int64  `json:"SenderUin"`
-		SenderNick string `json:"SenderNick"`
-		MsgType    int    `json:"MsgType"`
-		C2CCmd     int    `json:"C2cCmd"`
-		MsgSeq     int64  `json:"MsgSeq"`
-		MsgTime    int64  `json:"MsgTime"`
-		MsgRandom  int64  `json:"MsgRandom"`
-		MsgUid     int64  `json:"MsgUid"`
-		GroupInfo  struct {
-			GroupCard    string `json:"GroupCard"`
-			GroupCode    int    `json:"GroupCode"`
-			GroupInfoSeq int    `json:"GroupInfoSeq"`
-			GroupLevel   int    `json:"GroupLevel"`
-			GroupRank    int    `json:"GroupRank"`
-			GroupType    int    `json:"GroupType"`
-			GroupName    string `json:"GroupName"`
-		} `json:"GroupInfo"`
+		FromUin            int64       `json:"FromUin"`
+		ToUin              int64       `json:"ToUin"`
+		FromType           int         `json:"FromType"`
+		SenderUin          int64       `json:"SenderUin"`
+		SenderNick         string      `json:"SenderNick"`
+		MsgType            int         `json:"MsgType"`
+		C2CCmd             int         `json:"C2cCmd"`
+		MsgSeq             int64       `json:"MsgSeq"`
+		MsgTime            int64       `json:"MsgTime"`
+		MsgRandom          int64       `json:"MsgRandom"`
+		MsgUid             int64       `json:"MsgUid"`
+		GroupInfo          GroupInfo   `json:"GroupInfo"`
 		C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 	} `json:"MsgHead,omitempty"`
 	MsgBody *struct {
@@ -426,12 +374,9 @@ func easyjson692db02bEncode1(out *jwriter.Writer, in struct {
 			FileSize int    `json:"FileSize"`
 			Url      string `json:"Url"`
 		} `json:"Images"`
-		AtUinLists []struct {
-			Nick string `json:"Nick"`
-			Uin  int64  `json:"Uin"`
-		} `json:"AtUinLists"`
-		Video interface{} `json:"Video"`
-		Voice interface{} `json:"Voice"`
+		AtUinLists []UserInfo  `json:"AtUinLists"`
+		Video      interface{} `json:"Video"`
+		Voice      interface{} `json:"Voice"`
 	} `json:"MsgBody,omitempty"`
 }) {
 	out.RawByte('{')
@@ -494,12 +439,9 @@ func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
 		FileSize int    `json:"FileSize"`
 		Url      string `json:"Url"`
 	} `json:"Images"`
-	AtUinLists []struct {
-		Nick string `json:"Nick"`
-		Uin  int64  `json:"Uin"`
-	} `json:"AtUinLists"`
-	Video interface{} `json:"Video"`
-	Voice interface{} `json:"Voice"`
+	AtUinLists []UserInfo  `json:"AtUinLists"`
+	Video      interface{} `json:"Video"`
+	Voice      interface{} `json:"Voice"`
 }) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
@@ -569,25 +511,16 @@ func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
 				in.Delim('[')
 				if out.AtUinLists == nil {
 					if !in.IsDelim(']') {
-						out.AtUinLists = make([]struct {
-							Nick string `json:"Nick"`
-							Uin  int64  `json:"Uin"`
-						}, 0, 2)
+						out.AtUinLists = make([]UserInfo, 0, 2)
 					} else {
-						out.AtUinLists = []struct {
-							Nick string `json:"Nick"`
-							Uin  int64  `json:"Uin"`
-						}{}
+						out.AtUinLists = []UserInfo{}
 					}
 				} else {
 					out.AtUinLists = (out.AtUinLists)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v2 struct {
-						Nick string `json:"Nick"`
-						Uin  int64  `json:"Uin"`
-					}
-					easyjson692db02bDecode5(in, &v2)
+					var v2 UserInfo
+					easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in, &v2)
 					out.AtUinLists = append(out.AtUinLists, v2)
 					in.WantComma()
 				}
@@ -628,12 +561,9 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 		FileSize int    `json:"FileSize"`
 		Url      string `json:"Url"`
 	} `json:"Images"`
-	AtUinLists []struct {
-		Nick string `json:"Nick"`
-		Uin  int64  `json:"Uin"`
-	} `json:"AtUinLists"`
-	Video interface{} `json:"Video"`
-	Voice interface{} `json:"Voice"`
+	AtUinLists []UserInfo  `json:"AtUinLists"`
+	Video      interface{} `json:"Video"`
+	Voice      interface{} `json:"Voice"`
 }) {
 	out.RawByte('{')
 	first := true
@@ -675,7 +605,7 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				easyjson692db02bEncode5(out, v6)
+				easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out, v6)
 			}
 			out.RawByte(']')
 		}
@@ -704,10 +634,7 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson692db02bDecode5(in *jlexer.Lexer, out *struct {
-	Nick string `json:"Nick"`
-	Uin  int64  `json:"Uin"`
-}) {
+func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in *jlexer.Lexer, out *UserInfo) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -740,10 +667,7 @@ func easyjson692db02bDecode5(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson692db02bEncode5(out *jwriter.Writer, in struct {
-	Nick string `json:"Nick"`
-	Uin  int64  `json:"Uin"`
-}) {
+func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out *jwriter.Writer, in UserInfo) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -833,26 +757,18 @@ func easyjson692db02bEncode4(out *jwriter.Writer, in struct {
 	out.RawByte('}')
 }
 func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
-	FromUin    int64  `json:"FromUin"`
-	ToUin      int64  `json:"ToUin"`
-	FromType   int    `json:"FromType"`
-	SenderUin  int64  `json:"SenderUin"`
-	SenderNick string `json:"SenderNick"`
-	MsgType    int    `json:"MsgType"`
-	C2CCmd     int    `json:"C2cCmd"`
-	MsgSeq     int64  `json:"MsgSeq"`
-	MsgTime    int64  `json:"MsgTime"`
-	MsgRandom  int64  `json:"MsgRandom"`
-	MsgUid     int64  `json:"MsgUid"`
-	GroupInfo  struct {
-		GroupCard    string `json:"GroupCard"`
-		GroupCode    int    `json:"GroupCode"`
-		GroupInfoSeq int    `json:"GroupInfoSeq"`
-		GroupLevel   int    `json:"GroupLevel"`
-		GroupRank    int    `json:"GroupRank"`
-		GroupType    int    `json:"GroupType"`
-		GroupName    string `json:"GroupName"`
-	} `json:"GroupInfo"`
+	FromUin            int64       `json:"FromUin"`
+	ToUin              int64       `json:"ToUin"`
+	FromType           int         `json:"FromType"`
+	SenderUin          int64       `json:"SenderUin"`
+	SenderNick         string      `json:"SenderNick"`
+	MsgType            int         `json:"MsgType"`
+	C2CCmd             int         `json:"C2cCmd"`
+	MsgSeq             int64       `json:"MsgSeq"`
+	MsgTime            int64       `json:"MsgTime"`
+	MsgRandom          int64       `json:"MsgRandom"`
+	MsgUid             int64       `json:"MsgUid"`
+	GroupInfo          GroupInfo   `json:"GroupInfo"`
 	C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 }) {
 	isTopLevel := in.IsStart()
@@ -896,7 +812,7 @@ func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
 		case "MsgUid":
 			out.MsgUid = int64(in.Int64())
 		case "GroupInfo":
-			easyjson692db02bDecode6(in, &out.GroupInfo)
+			easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in, &out.GroupInfo)
 		case "C2CTempMessageHead":
 			if m, ok := out.C2CTempMessageHead.(easyjson.Unmarshaler); ok {
 				m.UnmarshalEasyJSON(in)
@@ -916,26 +832,18 @@ func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
 	}
 }
 func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
-	FromUin    int64  `json:"FromUin"`
-	ToUin      int64  `json:"ToUin"`
-	FromType   int    `json:"FromType"`
-	SenderUin  int64  `json:"SenderUin"`
-	SenderNick string `json:"SenderNick"`
-	MsgType    int    `json:"MsgType"`
-	C2CCmd     int    `json:"C2cCmd"`
-	MsgSeq     int64  `json:"MsgSeq"`
-	MsgTime    int64  `json:"MsgTime"`
-	MsgRandom  int64  `json:"MsgRandom"`
-	MsgUid     int64  `json:"MsgUid"`
-	GroupInfo  struct {
-		GroupCard    string `json:"GroupCard"`
-		GroupCode    int    `json:"GroupCode"`
-		GroupInfoSeq int    `json:"GroupInfoSeq"`
-		GroupLevel   int    `json:"GroupLevel"`
-		GroupRank    int    `json:"GroupRank"`
-		GroupType    int    `json:"GroupType"`
-		GroupName    string `json:"GroupName"`
-	} `json:"GroupInfo"`
+	FromUin            int64       `json:"FromUin"`
+	ToUin              int64       `json:"ToUin"`
+	FromType           int         `json:"FromType"`
+	SenderUin          int64       `json:"SenderUin"`
+	SenderNick         string      `json:"SenderNick"`
+	MsgType            int         `json:"MsgType"`
+	C2CCmd             int         `json:"C2cCmd"`
+	MsgSeq             int64       `json:"MsgSeq"`
+	MsgTime            int64       `json:"MsgTime"`
+	MsgRandom          int64       `json:"MsgRandom"`
+	MsgUid             int64       `json:"MsgUid"`
+	GroupInfo          GroupInfo   `json:"GroupInfo"`
 	C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 }) {
 	out.RawByte('{')
@@ -999,7 +907,7 @@ func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 	{
 		const prefix string = ",\"GroupInfo\":"
 		out.RawString(prefix)
-		easyjson692db02bEncode6(out, in.GroupInfo)
+		easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events2(out, in.GroupInfo)
 	}
 	{
 		const prefix string = ",\"C2CTempMessageHead\":"
@@ -1014,15 +922,7 @@ func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson692db02bDecode6(in *jlexer.Lexer, out *struct {
-	GroupCard    string `json:"GroupCard"`
-	GroupCode    int    `json:"GroupCode"`
-	GroupInfoSeq int    `json:"GroupInfoSeq"`
-	GroupLevel   int    `json:"GroupLevel"`
-	GroupRank    int    `json:"GroupRank"`
-	GroupType    int    `json:"GroupType"`
-	GroupName    string `json:"GroupName"`
-}) {
+func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in *jlexer.Lexer, out *GroupInfo) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1065,15 +965,7 @@ func easyjson692db02bDecode6(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson692db02bEncode6(out *jwriter.Writer, in struct {
-	GroupCard    string `json:"GroupCard"`
-	GroupCode    int    `json:"GroupCode"`
-	GroupInfoSeq int    `json:"GroupInfoSeq"`
-	GroupLevel   int    `json:"GroupLevel"`
-	GroupRank    int    `json:"GroupRank"`
-	GroupType    int    `json:"GroupType"`
-	GroupName    string `json:"GroupName"`
-}) {
+func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events2(out *jwriter.Writer, in GroupInfo) {
 	out.RawByte('{')
 	first := true
 	_ = first
