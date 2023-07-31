@@ -6,11 +6,11 @@ require (
 	github.com/charmbracelet/log v0.2.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/imroc/req/v3 v3.33.2
+	github.com/mailru/easyjson v0.7.7
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/mcoo/OPQBot v0.2.1
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/rotisserie/eris v0.5.4
-	github.com/sashabaranov/go-openai v1.6.1
 )
 
 require (
@@ -24,7 +24,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect

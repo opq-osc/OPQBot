@@ -40,6 +40,7 @@ type CgiRequest struct {
 	SubMsgType *int    `json:"SubMsgType,omitempty"`
 	Images     []*File `json:"Images,omitempty"`
 	Uid        *string `json:"Uid,omitempty"`
+	MsgRandom  *int64  `json:"MsgRandom,omitempty"`
 	AtUinLists []struct {
 		Uin *int64 `json:"Uin,omitempty"`
 	} `json:"AtUinLists,omitempty"`
