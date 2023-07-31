@@ -9,8 +9,6 @@ import (
 	"github.com/opq-osc/OPQBot/v2/events"
 )
 
-const apiUrl = "http://127.0.0.1:8086"
-
 func main() {
 	log.SetLevel(log.DebugLevel)
 	log.SetReportCaller(true)

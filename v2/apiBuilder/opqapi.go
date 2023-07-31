@@ -41,6 +41,8 @@ type CgiRequest struct {
 	Images     []*File `json:"Images,omitempty"`
 	Uid        *string `json:"Uid,omitempty"`
 	MsgRandom  *int64  `json:"MsgRandom,omitempty"`
+	BanTime    *int    `json:"BanTime,omitempty"`
+	Nick       *string `json:"Nick,omitempty"`
 	AtUinLists []struct {
 		Uin *int64 `json:"Uin,omitempty"`
 	} `json:"AtUinLists,omitempty"`
