@@ -50,6 +50,7 @@ type IEvent interface {
 	ParseGroupMsg() IGroupMsg
 	ParseLoginSuccessEvent() ILoginSuccess
 	ParseNetworkChangeEvent() INetworkChange
+	PraseGroupJoinEvent() IGroupJoinEvent
 	ExcludeBot() IEvent
 }
 type IGroupMsg interface {
@@ -64,6 +65,8 @@ type IGroupMsg interface {
 	ParseTextMsg() ITextMsg
 	ContainedPic() bool
 	ContainedAt() bool
+	GetMsgSeq() int64
+	GetMsgRandom() int64
 }
 type ITextMsg interface {
 	GetTextContent() string
@@ -74,6 +77,12 @@ type ILoginSuccess interface {
 type INetworkChange interface {
 	GetNetworkChangeBot() (nick string, uin int64, content string)
 }
+
+type IGroupJoinEvent interface {
+	GetGroupJoinEvent() (Invitee string, Invitor string, tips string)
+	GetGroupUId() int64
+}
+
 type ICommonMsg interface {
 	GetMsgUid() int64
 	GetMsgType() MsgType
@@ -142,10 +151,19 @@ type EventStruct struct {
 				Video      interface{} `json:"Video"`
 				Voice      interface{} `json:"Voice"`
 			} `json:"MsgBody,omitempty"`
+			Event *struct {
+				Invitee string `json:"Invitee"`
+				Invitor string `json:"Invitor"`
+				Tips    string `json:"Tips"`
+			} `json:"Event,omitempty"`
 		} `json:"EventData"`
 		EventName string `json:"EventName"`
 	} `json:"CurrentPacket"`
 	CurrentQQ int64 `json:"CurrentQQ"`
+}
+
+func (e *EventStruct) PraseGroupJoinEvent() IGroupJoinEvent {
+	return e
 }
 
 func (e *EventStruct) ParseNetworkChangeEvent() INetworkChange {
@@ -157,6 +175,15 @@ func (e *EventStruct) ParseLoginSuccessEvent() ILoginSuccess {
 func (e *EventStruct) GetNetworkChangeBot() (nick string, uin int64, content string) {
 	return *e.CurrentPacket.EventData.Nick, *e.CurrentPacket.EventData.Uin, *e.CurrentPacket.EventData.Content
 }
+
+func (e *EventStruct) GetGroupJoinEvent() (Invitee string, Invitor string, tips string) {
+	return e.CurrentPacket.EventData.Event.Invitee, e.CurrentPacket.EventData.Event.Invitor, e.CurrentPacket.EventData.Event.Tips
+}
+
+func (e *EventStruct) GetGroupUId() (uin int64) {
+	return e.CurrentPacket.EventData.MsgHead.ToUin
+}
+
 func (e *EventStruct) GetAtList() (list []int64) {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
 		list = append(list, v.Uin)
@@ -169,6 +196,16 @@ func (e *EventStruct) ContainedPic() bool {
 func (e *EventStruct) ContainedAt() bool {
 	return e.CurrentPacket.EventData.MsgBody.AtUinLists != nil
 }
+
+func (e *EventStruct) GetMsgSeq() int64 {
+	return e.CurrentPacket.EventData.MsgHead.MsgSeq
+}
+
+func (e *EventStruct) GetMsgRandom() int64 {
+	return e.CurrentPacket.EventData.MsgHead.MsgRandom
+
+}
+
 func (e *EventStruct) AtBot() (at bool) {
 	for _, v := range e.CurrentPacket.EventData.MsgBody.AtUinLists {
 		if v.Uin == e.CurrentQQ {

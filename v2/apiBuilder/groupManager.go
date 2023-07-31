@@ -4,6 +4,10 @@ type IGroupManager interface {
 	DoApi
 	GetGroupLists() IGroupManager
 	GroupSystemMsgAction(MsgType int, MsgSeq, GroupCode int64) IGroupSystemMsgAction
+	RevokeMsg() IGroupManager
+	ToGUin(Uin int64) IGroupManager
+	MsgSeq(MsgSeq int64) IGroupManager
+	MsgRandom(MsgRandom int64) IGroupManager
 }
 type IGroupSystemMsgAction interface {
 	DoApi
@@ -73,5 +77,26 @@ func (b *Builder) GroupSystemMsgAction(MsgType int, MsgSeq, GroupCode int64) IGr
 	b.CgiRequest.MsgType = &MsgType
 	b.CgiRequest.MsgSeq = &MsgSeq
 	b.CgiRequest.GroupCode = &GroupCode
+	return b
+}
+
+func (b *Builder) RevokeMsg() IGroupManager {
+	cmd := "GroupRevokeMsg"
+	b.CgiCmd = &cmd
+	return b
+}
+
+func (b *Builder) ToGUin(Uin int64) IGroupManager {
+	b.CgiRequest.Uin = &Uin
+	return b
+}
+
+func (b *Builder) MsgSeq(MsgSeq int64) IGroupManager {
+	b.CgiRequest.MsgSeq = &MsgSeq
+	return b
+}
+
+func (b *Builder) MsgRandom(MsgRandom int64) IGroupManager {
+	b.CgiRequest.MsgRandom = &MsgRandom
 	return b
 }

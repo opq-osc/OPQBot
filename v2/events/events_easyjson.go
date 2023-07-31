@@ -123,6 +123,11 @@ func easyjson692db02bDecode(in *jlexer.Lexer, out *struct {
 			Video      interface{} `json:"Video"`
 			Voice      interface{} `json:"Voice"`
 		} `json:"MsgBody,omitempty"`
+		Event *struct {
+			Invitee string `json:"Invitee"`
+			Invitor string `json:"Invitor"`
+			Tips    string `json:"Tips"`
+		} `json:"Event,omitempty"`
 	} `json:"EventData"`
 	EventName string `json:"EventName"`
 }) {
@@ -191,6 +196,11 @@ func easyjson692db02bEncode(out *jwriter.Writer, in struct {
 			Video      interface{} `json:"Video"`
 			Voice      interface{} `json:"Voice"`
 		} `json:"MsgBody,omitempty"`
+		Event *struct {
+			Invitee string `json:"Invitee"`
+			Invitor string `json:"Invitor"`
+			Tips    string `json:"Tips"`
+		} `json:"Event,omitempty"`
 	} `json:"EventData"`
 	EventName string `json:"EventName"`
 }) {
@@ -241,6 +251,11 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 		Video      interface{} `json:"Video"`
 		Voice      interface{} `json:"Voice"`
 	} `json:"MsgBody,omitempty"`
+	Event *struct {
+		Invitee string `json:"Invitee"`
+		Invitor string `json:"Invitor"`
+		Tips    string `json:"Tips"`
+	} `json:"Event,omitempty"`
 }) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
@@ -336,6 +351,20 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 				}
 				easyjson692db02bDecode3(in, out.MsgBody)
 			}
+		case "Event":
+			if in.IsNull() {
+				in.Skip()
+				out.Event = nil
+			} else {
+				if out.Event == nil {
+					out.Event = new(struct {
+						Invitee string `json:"Invitee"`
+						Invitor string `json:"Invitor"`
+						Tips    string `json:"Tips"`
+					})
+				}
+				easyjson692db02bDecode4(in, out.Event)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -378,6 +407,11 @@ func easyjson692db02bEncode1(out *jwriter.Writer, in struct {
 		Video      interface{} `json:"Video"`
 		Voice      interface{} `json:"Voice"`
 	} `json:"MsgBody,omitempty"`
+	Event *struct {
+		Invitee string `json:"Invitee"`
+		Invitor string `json:"Invitor"`
+		Tips    string `json:"Tips"`
+	} `json:"Event,omitempty"`
 }) {
 	out.RawByte('{')
 	first := true
@@ -427,6 +461,80 @@ func easyjson692db02bEncode1(out *jwriter.Writer, in struct {
 			out.RawString(prefix)
 		}
 		easyjson692db02bEncode3(out, *in.MsgBody)
+	}
+	if in.Event != nil {
+		const prefix string = ",\"Event\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		easyjson692db02bEncode4(out, *in.Event)
+	}
+	out.RawByte('}')
+}
+func easyjson692db02bDecode4(in *jlexer.Lexer, out *struct {
+	Invitee string `json:"Invitee"`
+	Invitor string `json:"Invitor"`
+	Tips    string `json:"Tips"`
+}) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "Invitee":
+			out.Invitee = string(in.String())
+		case "Invitor":
+			out.Invitor = string(in.String())
+		case "Tips":
+			out.Tips = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson692db02bEncode4(out *jwriter.Writer, in struct {
+	Invitee string `json:"Invitee"`
+	Invitor string `json:"Invitor"`
+	Tips    string `json:"Tips"`
+}) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"Invitee\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Invitee))
+	}
+	{
+		const prefix string = ",\"Invitor\":"
+		out.RawString(prefix)
+		out.String(string(in.Invitor))
+	}
+	{
+		const prefix string = ",\"Tips\":"
+		out.RawString(prefix)
+		out.String(string(in.Tips))
 	}
 	out.RawByte('}')
 }
@@ -497,7 +605,7 @@ func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
 						FileSize int    `json:"FileSize"`
 						Url      string `json:"Url"`
 					}
-					easyjson692db02bDecode4(in, &v1)
+					easyjson692db02bDecode5(in, &v1)
 					out.Images = append(out.Images, v1)
 					in.WantComma()
 				}
@@ -589,7 +697,7 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 				if v3 > 0 {
 					out.RawByte(',')
 				}
-				easyjson692db02bEncode4(out, v4)
+				easyjson692db02bEncode5(out, v4)
 			}
 			out.RawByte(']')
 		}
@@ -683,7 +791,7 @@ func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out *jwriter.Writer, i
 	}
 	out.RawByte('}')
 }
-func easyjson692db02bDecode4(in *jlexer.Lexer, out *struct {
+func easyjson692db02bDecode5(in *jlexer.Lexer, out *struct {
 	FileId   int64  `json:"FileId"`
 	FileMd5  string `json:"FileMd5"`
 	FileSize int    `json:"FileSize"`
@@ -725,7 +833,7 @@ func easyjson692db02bDecode4(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson692db02bEncode4(out *jwriter.Writer, in struct {
+func easyjson692db02bEncode5(out *jwriter.Writer, in struct {
 	FileId   int64  `json:"FileId"`
 	FileMd5  string `json:"FileMd5"`
 	FileSize int    `json:"FileSize"`

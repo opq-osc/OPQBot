@@ -9,7 +9,7 @@ import (
 	"github.com/opq-osc/OPQBot/v2/events"
 )
 
-const apiUrl = "http://localhost:8086"
+const apiUrl = "http://127.0.0.1:8086"
 
 func main() {
 	log.SetLevel(log.DebugLevel)
@@ -18,6 +18,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// 群组相关功能
+	go HandleGroupMsg(core)
 	core.On(events.EventNameGroupMsg, func(ctx context.Context, event events.IEvent) {
 		if event.GetMsgType() == events.MsgTypeGroupMsg {
 			groupMsg := event.ParseGroupMsg()
@@ -30,6 +32,7 @@ func main() {
 		}
 
 	})
+
 	err = core.ListenAndWait(context.Background())
 	if err != nil {
 		panic(err)
