@@ -7,6 +7,7 @@ import (
 	"github.com/opq-osc/OPQBot/v2"
 	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/events"
+	"golang.org/x/sync/errgroup"
 	"regexp"
 	"strings"
 	"sync"
@@ -97,17 +98,18 @@ func HandleGroupMsg(core *OPQBot.Core) {
 						intTime = 604800
 					}
 					if len(user) > 0 {
-						wg := sync.WaitGroup{}
-						wg.Add(len(user))
+						group, ctx := errgroup.WithContext(context.Background())
 						for _, u := range user {
-							go func(u events.UserInfo) {
-								// 由于现在 at user 中并没有 uid ， 等待后续更新
-								apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().ProhibitedUser().ToGUin(groupMsg.GetGroupUin()).ToUid("u_8Unz3AyEaG3wPEEdFxPsGA").ShutTime(intTime).Do(ctx)
-								apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("用户%s已经被成功禁言 %s", u.Nick, time)).Do(ctx)
-								wg.Done()
-							}(u)
+							group.Go(func() error {
+								return apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().ProhibitedUser().ToGUin(groupMsg.GetGroupUin()).ToUid("u_8Unz3AyEaG3wPEEdFxPsGA").ShutTime(intTime).Do(ctx)
+							})
+							group.Go(func() error {
+								return apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("用户%s已经被成功禁言 %s", u.Nick, time)).Do(ctx)
+							})
 						}
-						wg.Wait()
+						if err := group.Wait(); err != nil {
+							apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("禁言失败，未找到用户").Do(ctx)
+						}
 					} else {
 						apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("禁言失败，未找到用户").Do(ctx)
 					}
@@ -118,17 +120,19 @@ func HandleGroupMsg(core *OPQBot.Core) {
 					// 获取被禁言的用户
 					user := groupMsg.GetAtInfo()
 					if len(user) > 0 {
-						wg := sync.WaitGroup{}
-						wg.Add(len(user))
+						group, ctx := errgroup.WithContext(context.Background())
 						for _, u := range user {
-							go func(u events.UserInfo) {
-								// 由于现在 at user 中并没有 uid ， 等待后续更新
-								apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().RemoveUser().ToGUin(groupMsg.GetGroupUin()).ToUid("u_8Unz3AyEaG3wPEEdFxPsGA").Do(ctx)
-								apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("用户%s已经被移除本群", u.Nick)).Do(ctx)
-								wg.Done()
-							}(u)
+							group.Go(func() error {
+								return apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().RemoveUser().ToGUin(groupMsg.GetGroupUin()).ToUid("u_8Unz3AyEaG3wPEEdFxPsGA").Do(ctx)
+							})
+							group.Go(func() error {
+								return apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("用户%s已经被移除本群", u.Nick)).Do(ctx)
+							})
 						}
-						wg.Wait()
+						if err := group.Wait(); err != nil {
+							apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("移除失败，未找到用户").Do(ctx)
+						}
+
 					} else {
 						apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("移除失败，未找到用户").Do(ctx)
 					}
@@ -138,17 +142,19 @@ func HandleGroupMsg(core *OPQBot.Core) {
 					// 获取被禁言的用户
 					user := groupMsg.GetAtInfo()
 					if len(user) > 0 {
-						wg := sync.WaitGroup{}
-						wg.Add(len(user))
+						group, ctx := errgroup.WithContext(context.Background())
 						for _, u := range user {
-							go func(u events.UserInfo) {
-								// 由于现在 at user 中并没有 uid ， 等待后续更新
-								apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().RenameUserNickName("测试").ToGUin(groupMsg.GetGroupUin()).ToUid("u_8Unz3AyEaG3wPEEdFxPsGA").Do(ctx)
-								apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("用户%s昵称修改完成", u.Nick)).Do(ctx)
-								wg.Done()
-							}(u)
+							group.Go(func() error {
+								return apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().RenameUserNickName("测试").ToGUin(groupMsg.GetGroupUin()).ToUid("u_8Unz3AyEaG3wPEEdFxPsGA").Do(ctx)
+							})
+							group.Go(func() error {
+								return apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("用户%s昵称修改完成", u.Nick)).Do(ctx)
+							})
 						}
-						wg.Wait()
+						if err := group.Wait(); err != nil {
+							apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg(fmt.Sprintf("修改用户昵称失败")).Do(ctx)
+						}
+
 					} else {
 						apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("修改失败，未找到用户").Do(ctx)
 					}
