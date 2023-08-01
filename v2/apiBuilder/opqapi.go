@@ -12,6 +12,7 @@ import (
 
 type DoApi interface {
 	Do(ctx context.Context) error
+	DoWithCallBack(ctx context.Context, callBack func(response *Response, err error)) error
 	DoAndResponse(ctx context.Context) (*Response, error)
 }
 type Builder struct {
@@ -63,6 +64,19 @@ func (b *Builder) Do(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (b *Builder) DoWithCallBack(ctx context.Context, callBack func(response *Response, err error)) error {
+	r, err := b.DoAndResponse(ctx)
+	if err != nil {
+		return err
+	}
+	if !r.Ok() {
+		return fmt.Errorf(r.ErrorMsg())
+	}
+	defer callBack(r, nil)
+	return nil
+}
+
 func (b *Builder) DoAndResponse(ctx context.Context) (*Response, error) {
 
 	body, err := b.BuildStringBody()

@@ -10,10 +10,16 @@ type ResponseStruct struct {
 		ErrMsg string `json:"ErrMsg"`
 	} `json:"CgiBaseResponse"`
 	ResponseData json.RawMessage `json:"ResponseData,omitempty"`
+	Data         interface{}     `json:"Data"`
 }
 type Response struct {
 	originMsg []byte
 	response  *ResponseStruct
+}
+
+type GroupMessageResponse struct {
+	MsgSeq  int64 `json:"MsgSeq"`
+	MsgTime int64 `json:"MsgTime"`
 }
 
 func NewResponse(msg []byte) *Response {
@@ -53,4 +59,13 @@ func (r *Response) Result() (Ret int, ErrMsg string) {
 }
 func (r *Response) GetOrigin() []byte {
 	return r.originMsg
+}
+
+func (r *Response) GetGroupMessageResponse() (*GroupMessageResponse, error) {
+	if err := r.unmarshal(); err != nil {
+		return nil, err
+	}
+	data := &GroupMessageResponse{}
+	err := json.Unmarshal(r.response.ResponseData, data)
+	return data, err
 }
