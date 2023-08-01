@@ -37,3 +37,11 @@ func main() {
 	}
 }
 ```
+
+> 如果需要开启 每天定时自动签到，请在 初始化core采用以下方式：
+```go
+core, err := OPQBot.NewCore("http://localhost:8086", OPQBot.WithMaxRetryCount(5), OPQBot.WithAutoSignToken(qqbot, groupBot))
+if err != nil {
+    log.Fatal(err)
+}
+```

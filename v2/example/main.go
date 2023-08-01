@@ -12,7 +12,7 @@ import (
 func main() {
 	log.SetLevel(log.DebugLevel)
 	log.SetReportCaller(true)
-	core, err := OPQBot.NewCore(apiUrl, OPQBot.WithMaxRetryCount(5))
+	core, err := OPQBot.NewCore(apiUrl, OPQBot.WithMaxRetryCount(5), OPQBot.WithAutoSignToken(123123, 123123))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +30,6 @@ func main() {
 		}
 
 	})
-
 	err = core.ListenAndWait(context.Background())
 	if err != nil {
 		panic(err)

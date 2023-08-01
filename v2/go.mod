@@ -11,6 +11,7 @@ require (
 	github.com/mcoo/OPQBot v0.2.1
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/rotisserie/eris v0.5.4
+	golang.org/x/sync v0.1.0
 )
 
 require (
@@ -22,6 +23,7 @@ require (
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/jasonlvhit/gocron v0.0.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect

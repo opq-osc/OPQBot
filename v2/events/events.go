@@ -67,6 +67,7 @@ type IGroupMsg interface {
 	ContainedAt() bool
 	GetMsgSeq() int64
 	GetMsgRandom() int64
+	IsFromBot() bool
 }
 type ITextMsg interface {
 	GetTextContent() string
@@ -203,7 +204,10 @@ func (e *EventStruct) GetMsgSeq() int64 {
 
 func (e *EventStruct) GetMsgRandom() int64 {
 	return e.CurrentPacket.EventData.MsgHead.MsgRandom
+}
 
+func (e *EventStruct) IsFromBot() bool {
+	return e.CurrentPacket.EventData.MsgHead.SenderUin == e.CurrentQQ
 }
 
 func (e *EventStruct) AtBot() (at bool) {
