@@ -7,6 +7,7 @@ import (
 	"github.com/opq-osc/OPQBot/v2"
 	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/events"
+	"time"
 )
 
 func main() {
@@ -24,7 +25,14 @@ func main() {
 			if groupMsg.AtBot() {
 				text := groupMsg.ExcludeAtInfo().ParseTextMsg().GetTextContent()
 				if text == "test" {
-					apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("test").Do(ctx)
+					apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).TextMsg("test").DoWithCallBack(ctx, func(iApiBuilder *apiBuilder.Response, err error) {
+						response, err := iApiBuilder.GetGroupMessageResponse()
+						if err != nil {
+							return
+						}
+						time.Sleep(time.Second * 1)
+						apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().RevokeMsg().ToGUin(groupMsg.GetGroupUin()).MsgSeq(response.MsgSeq).MsgRandom(response.MsgTime).Do(ctx)
+					})
 				}
 			}
 		}
