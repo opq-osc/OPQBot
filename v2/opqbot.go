@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/websocket"
+	"github.com/jasonlvhit/gocron"
+	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/errors"
 	"github.com/opq-osc/OPQBot/v2/events"
 	"github.com/rotisserie/eris"
@@ -23,6 +25,10 @@ type Core struct {
 	client                    *websocket.Conn
 	handlePanic               func(any)
 	retryCount, MaxRetryCount int
+	autoSignToken             bool
+	apibase                   string
+	botQQ                     *int64
+	groupQQ                   *int64
 
 	done chan struct{}
 }
@@ -42,6 +48,7 @@ func (c *Core) On(event events.EventName, callback events.EventCallbackFunc) {
 func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithCancel(ctx)
+	go c.MakeAutoSign()
 	defer cancel()
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, os.Kill)
@@ -137,11 +144,35 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 	return c.err
 }
 
+// MakeAutoSign 定时任务 自动签到
+func (c *Core) MakeAutoSign() {
+	if c.autoSignToken && c.botQQ != nil && c.groupQQ != nil {
+		log.Info("已经开启自动签到，每天1点在官方群发送签到信息")
+		s := gocron.NewScheduler()
+		err := s.Every(1).Days().At("01:00").Do(func() {
+			log.Info("执行自动签到任务")
+			apiBuilder.New(c.apibase, *c.botQQ).SendMsg().GroupMsg().ToUin(*c.groupQQ).TextMsg("签到").Do(context.Background())
+		})
+		if err != nil {
+			return
+		}
+		<-s.Start()
+	}
+}
+
 type CoreOpt func(*Core)
 
 func WithMaxRetryCount(maxCount int) CoreOpt {
 	return func(c *Core) {
 		c.MaxRetryCount = maxCount
+	}
+}
+
+func WithAutoSignToken(botQQ int64, groupQQ int64) CoreOpt {
+	return func(c *Core) {
+		c.autoSignToken = true
+		c.botQQ = &botQQ
+		c.groupQQ = &groupQQ
 	}
 }
 
@@ -152,10 +183,12 @@ func NewCore(api string, opt ...CoreOpt) (*Core, error) {
 	}
 	c := &Core{
 		ApiUrl:        u,
+		apibase:       api,
 		events:        make(map[events.EventName][]events.EventCallbackFunc),
 		lock:          sync.RWMutex{},
 		done:          nil,
 		MaxRetryCount: 10,
+		autoSignToken: false,
 	}
 	for _, v := range opt {
 		v(c)
