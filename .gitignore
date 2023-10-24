@@ -7,6 +7,7 @@
 *.sum
 /.idea/
 /build/
+go.work
 # Test binary, built with `go test -c`
 *.test
 
