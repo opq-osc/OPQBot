@@ -39,6 +39,14 @@ func main() {
 		}
 
 	})
+	core.On(events.EventNameFriendMsg, func(ctx context.Context, event events.IEvent) {
+		if event.GetMsgType() == events.MsgTypeFriendsMsg {
+			friendMsg := event.ParseFriendMsg()
+			if friendMsg.ParseTextMsg().GetTextContent() == "test" && friendMsg.GetSenderUin() != event.GetCurrentQQ() {
+				apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().FriendMsg().ToUin(friendMsg.GetFriendUin()).TextMsg("test").Do(ctx)
+			}
+		}
+	})
 	err = core.ListenAndWait(context.Background())
 	if err != nil {
 		panic(err)

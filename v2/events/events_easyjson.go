@@ -97,9 +97,11 @@ func easyjson692db02bDecode(in *jlexer.Lexer, out *struct {
 		Content *string `json:"Content,omitempty"`
 		MsgHead *struct {
 			FromUin            int64       `json:"FromUin"`
+			FromUid            string      `json:"FromUid"`
 			ToUin              int64       `json:"ToUin"`
 			FromType           int         `json:"FromType"`
 			SenderUin          int64       `json:"SenderUin"`
+			SenderUid          string      `json:"SenderUid"`
 			SenderNick         string      `json:"SenderNick"`
 			MsgType            int         `json:"MsgType"`
 			C2CCmd             int         `json:"C2cCmd"`
@@ -111,14 +113,9 @@ func easyjson692db02bDecode(in *jlexer.Lexer, out *struct {
 			C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 		} `json:"MsgHead,omitempty"`
 		MsgBody *struct {
-			SubMsgType int    `json:"SubMsgType"`
-			Content    string `json:"Content"`
-			Images     []struct {
-				FileId   int64  `json:"FileId"`
-				FileMd5  string `json:"FileMd5"`
-				FileSize int    `json:"FileSize"`
-				Url      string `json:"Url"`
-			} `json:"Images"`
+			SubMsgType int         `json:"SubMsgType"`
+			Content    string      `json:"Content"`
+			Images     []Image     `json:"Images"`
 			AtUinLists []UserInfo  `json:"AtUinLists"`
 			Video      interface{} `json:"Video"`
 			Voice      interface{} `json:"Voice"`
@@ -170,9 +167,11 @@ func easyjson692db02bEncode(out *jwriter.Writer, in struct {
 		Content *string `json:"Content,omitempty"`
 		MsgHead *struct {
 			FromUin            int64       `json:"FromUin"`
+			FromUid            string      `json:"FromUid"`
 			ToUin              int64       `json:"ToUin"`
 			FromType           int         `json:"FromType"`
 			SenderUin          int64       `json:"SenderUin"`
+			SenderUid          string      `json:"SenderUid"`
 			SenderNick         string      `json:"SenderNick"`
 			MsgType            int         `json:"MsgType"`
 			C2CCmd             int         `json:"C2cCmd"`
@@ -184,14 +183,9 @@ func easyjson692db02bEncode(out *jwriter.Writer, in struct {
 			C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 		} `json:"MsgHead,omitempty"`
 		MsgBody *struct {
-			SubMsgType int    `json:"SubMsgType"`
-			Content    string `json:"Content"`
-			Images     []struct {
-				FileId   int64  `json:"FileId"`
-				FileMd5  string `json:"FileMd5"`
-				FileSize int    `json:"FileSize"`
-				Url      string `json:"Url"`
-			} `json:"Images"`
+			SubMsgType int         `json:"SubMsgType"`
+			Content    string      `json:"Content"`
+			Images     []Image     `json:"Images"`
 			AtUinLists []UserInfo  `json:"AtUinLists"`
 			Video      interface{} `json:"Video"`
 			Voice      interface{} `json:"Voice"`
@@ -225,9 +219,11 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 	Content *string `json:"Content,omitempty"`
 	MsgHead *struct {
 		FromUin            int64       `json:"FromUin"`
+		FromUid            string      `json:"FromUid"`
 		ToUin              int64       `json:"ToUin"`
 		FromType           int         `json:"FromType"`
 		SenderUin          int64       `json:"SenderUin"`
+		SenderUid          string      `json:"SenderUid"`
 		SenderNick         string      `json:"SenderNick"`
 		MsgType            int         `json:"MsgType"`
 		C2CCmd             int         `json:"C2cCmd"`
@@ -239,14 +235,9 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 		C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 	} `json:"MsgHead,omitempty"`
 	MsgBody *struct {
-		SubMsgType int    `json:"SubMsgType"`
-		Content    string `json:"Content"`
-		Images     []struct {
-			FileId   int64  `json:"FileId"`
-			FileMd5  string `json:"FileMd5"`
-			FileSize int    `json:"FileSize"`
-			Url      string `json:"Url"`
-		} `json:"Images"`
+		SubMsgType int         `json:"SubMsgType"`
+		Content    string      `json:"Content"`
+		Images     []Image     `json:"Images"`
 		AtUinLists []UserInfo  `json:"AtUinLists"`
 		Video      interface{} `json:"Video"`
 		Voice      interface{} `json:"Voice"`
@@ -313,9 +304,11 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 				if out.MsgHead == nil {
 					out.MsgHead = new(struct {
 						FromUin            int64       `json:"FromUin"`
+						FromUid            string      `json:"FromUid"`
 						ToUin              int64       `json:"ToUin"`
 						FromType           int         `json:"FromType"`
 						SenderUin          int64       `json:"SenderUin"`
+						SenderUid          string      `json:"SenderUid"`
 						SenderNick         string      `json:"SenderNick"`
 						MsgType            int         `json:"MsgType"`
 						C2CCmd             int         `json:"C2cCmd"`
@@ -336,14 +329,9 @@ func easyjson692db02bDecode1(in *jlexer.Lexer, out *struct {
 			} else {
 				if out.MsgBody == nil {
 					out.MsgBody = new(struct {
-						SubMsgType int    `json:"SubMsgType"`
-						Content    string `json:"Content"`
-						Images     []struct {
-							FileId   int64  `json:"FileId"`
-							FileMd5  string `json:"FileMd5"`
-							FileSize int    `json:"FileSize"`
-							Url      string `json:"Url"`
-						} `json:"Images"`
+						SubMsgType int         `json:"SubMsgType"`
+						Content    string      `json:"Content"`
+						Images     []Image     `json:"Images"`
 						AtUinLists []UserInfo  `json:"AtUinLists"`
 						Video      interface{} `json:"Video"`
 						Voice      interface{} `json:"Voice"`
@@ -381,9 +369,11 @@ func easyjson692db02bEncode1(out *jwriter.Writer, in struct {
 	Content *string `json:"Content,omitempty"`
 	MsgHead *struct {
 		FromUin            int64       `json:"FromUin"`
+		FromUid            string      `json:"FromUid"`
 		ToUin              int64       `json:"ToUin"`
 		FromType           int         `json:"FromType"`
 		SenderUin          int64       `json:"SenderUin"`
+		SenderUid          string      `json:"SenderUid"`
 		SenderNick         string      `json:"SenderNick"`
 		MsgType            int         `json:"MsgType"`
 		C2CCmd             int         `json:"C2cCmd"`
@@ -395,14 +385,9 @@ func easyjson692db02bEncode1(out *jwriter.Writer, in struct {
 		C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 	} `json:"MsgHead,omitempty"`
 	MsgBody *struct {
-		SubMsgType int    `json:"SubMsgType"`
-		Content    string `json:"Content"`
-		Images     []struct {
-			FileId   int64  `json:"FileId"`
-			FileMd5  string `json:"FileMd5"`
-			FileSize int    `json:"FileSize"`
-			Url      string `json:"Url"`
-		} `json:"Images"`
+		SubMsgType int         `json:"SubMsgType"`
+		Content    string      `json:"Content"`
+		Images     []Image     `json:"Images"`
 		AtUinLists []UserInfo  `json:"AtUinLists"`
 		Video      interface{} `json:"Video"`
 		Voice      interface{} `json:"Voice"`
@@ -539,14 +524,9 @@ func easyjson692db02bEncode4(out *jwriter.Writer, in struct {
 	out.RawByte('}')
 }
 func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
-	SubMsgType int    `json:"SubMsgType"`
-	Content    string `json:"Content"`
-	Images     []struct {
-		FileId   int64  `json:"FileId"`
-		FileMd5  string `json:"FileMd5"`
-		FileSize int    `json:"FileSize"`
-		Url      string `json:"Url"`
-	} `json:"Images"`
+	SubMsgType int         `json:"SubMsgType"`
+	Content    string      `json:"Content"`
+	Images     []Image     `json:"Images"`
 	AtUinLists []UserInfo  `json:"AtUinLists"`
 	Video      interface{} `json:"Video"`
 	Voice      interface{} `json:"Voice"`
@@ -581,31 +561,16 @@ func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
 				in.Delim('[')
 				if out.Images == nil {
 					if !in.IsDelim(']') {
-						out.Images = make([]struct {
-							FileId   int64  `json:"FileId"`
-							FileMd5  string `json:"FileMd5"`
-							FileSize int    `json:"FileSize"`
-							Url      string `json:"Url"`
-						}, 0, 1)
+						out.Images = make([]Image, 0, 1)
 					} else {
-						out.Images = []struct {
-							FileId   int64  `json:"FileId"`
-							FileMd5  string `json:"FileMd5"`
-							FileSize int    `json:"FileSize"`
-							Url      string `json:"Url"`
-						}{}
+						out.Images = []Image{}
 					}
 				} else {
 					out.Images = (out.Images)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 struct {
-						FileId   int64  `json:"FileId"`
-						FileMd5  string `json:"FileMd5"`
-						FileSize int    `json:"FileSize"`
-						Url      string `json:"Url"`
-					}
-					easyjson692db02bDecode5(in, &v1)
+					var v1 Image
+					easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in, &v1)
 					out.Images = append(out.Images, v1)
 					in.WantComma()
 				}
@@ -628,7 +593,7 @@ func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
 				}
 				for !in.IsDelim(']') {
 					var v2 UserInfo
-					easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in, &v2)
+					easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in, &v2)
 					out.AtUinLists = append(out.AtUinLists, v2)
 					in.WantComma()
 				}
@@ -661,14 +626,9 @@ func easyjson692db02bDecode3(in *jlexer.Lexer, out *struct {
 	}
 }
 func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
-	SubMsgType int    `json:"SubMsgType"`
-	Content    string `json:"Content"`
-	Images     []struct {
-		FileId   int64  `json:"FileId"`
-		FileMd5  string `json:"FileMd5"`
-		FileSize int    `json:"FileSize"`
-		Url      string `json:"Url"`
-	} `json:"Images"`
+	SubMsgType int         `json:"SubMsgType"`
+	Content    string      `json:"Content"`
+	Images     []Image     `json:"Images"`
 	AtUinLists []UserInfo  `json:"AtUinLists"`
 	Video      interface{} `json:"Video"`
 	Voice      interface{} `json:"Voice"`
@@ -697,7 +657,7 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 				if v3 > 0 {
 					out.RawByte(',')
 				}
-				easyjson692db02bEncode5(out, v4)
+				easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out, v4)
 			}
 			out.RawByte(']')
 		}
@@ -713,7 +673,7 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out, v6)
+				easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events2(out, v6)
 			}
 			out.RawByte(']')
 		}
@@ -742,7 +702,7 @@ func easyjson692db02bEncode3(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in *jlexer.Lexer, out *UserInfo) {
+func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in *jlexer.Lexer, out *UserInfo) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -775,7 +735,7 @@ func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in *jlexer.Lexer, out 
 		in.Consumed()
 	}
 }
-func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out *jwriter.Writer, in UserInfo) {
+func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events2(out *jwriter.Writer, in UserInfo) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -791,12 +751,7 @@ func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out *jwriter.Writer, i
 	}
 	out.RawByte('}')
 }
-func easyjson692db02bDecode5(in *jlexer.Lexer, out *struct {
-	FileId   int64  `json:"FileId"`
-	FileMd5  string `json:"FileMd5"`
-	FileSize int    `json:"FileSize"`
-	Url      string `json:"Url"`
-}) {
+func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events1(in *jlexer.Lexer, out *Image) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -833,12 +788,7 @@ func easyjson692db02bDecode5(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson692db02bEncode5(out *jwriter.Writer, in struct {
-	FileId   int64  `json:"FileId"`
-	FileMd5  string `json:"FileMd5"`
-	FileSize int    `json:"FileSize"`
-	Url      string `json:"Url"`
-}) {
+func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events1(out *jwriter.Writer, in Image) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -866,9 +816,11 @@ func easyjson692db02bEncode5(out *jwriter.Writer, in struct {
 }
 func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
 	FromUin            int64       `json:"FromUin"`
+	FromUid            string      `json:"FromUid"`
 	ToUin              int64       `json:"ToUin"`
 	FromType           int         `json:"FromType"`
 	SenderUin          int64       `json:"SenderUin"`
+	SenderUid          string      `json:"SenderUid"`
 	SenderNick         string      `json:"SenderNick"`
 	MsgType            int         `json:"MsgType"`
 	C2CCmd             int         `json:"C2cCmd"`
@@ -899,12 +851,16 @@ func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
 		switch key {
 		case "FromUin":
 			out.FromUin = int64(in.Int64())
+		case "FromUid":
+			out.FromUid = string(in.String())
 		case "ToUin":
 			out.ToUin = int64(in.Int64())
 		case "FromType":
 			out.FromType = int(in.Int())
 		case "SenderUin":
 			out.SenderUin = int64(in.Int64())
+		case "SenderUid":
+			out.SenderUid = string(in.String())
 		case "SenderNick":
 			out.SenderNick = string(in.String())
 		case "MsgType":
@@ -920,7 +876,7 @@ func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
 		case "MsgUid":
 			out.MsgUid = int64(in.Int64())
 		case "GroupInfo":
-			easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in, &out.GroupInfo)
+			easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events3(in, &out.GroupInfo)
 		case "C2CTempMessageHead":
 			if m, ok := out.C2CTempMessageHead.(easyjson.Unmarshaler); ok {
 				m.UnmarshalEasyJSON(in)
@@ -941,9 +897,11 @@ func easyjson692db02bDecode2(in *jlexer.Lexer, out *struct {
 }
 func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 	FromUin            int64       `json:"FromUin"`
+	FromUid            string      `json:"FromUid"`
 	ToUin              int64       `json:"ToUin"`
 	FromType           int         `json:"FromType"`
 	SenderUin          int64       `json:"SenderUin"`
+	SenderUid          string      `json:"SenderUid"`
 	SenderNick         string      `json:"SenderNick"`
 	MsgType            int         `json:"MsgType"`
 	C2CCmd             int         `json:"C2cCmd"`
@@ -963,6 +921,11 @@ func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 		out.Int64(int64(in.FromUin))
 	}
 	{
+		const prefix string = ",\"FromUid\":"
+		out.RawString(prefix)
+		out.String(string(in.FromUid))
+	}
+	{
 		const prefix string = ",\"ToUin\":"
 		out.RawString(prefix)
 		out.Int64(int64(in.ToUin))
@@ -976,6 +939,11 @@ func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 		const prefix string = ",\"SenderUin\":"
 		out.RawString(prefix)
 		out.Int64(int64(in.SenderUin))
+	}
+	{
+		const prefix string = ",\"SenderUid\":"
+		out.RawString(prefix)
+		out.String(string(in.SenderUid))
 	}
 	{
 		const prefix string = ",\"SenderNick\":"
@@ -1015,7 +983,7 @@ func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 	{
 		const prefix string = ",\"GroupInfo\":"
 		out.RawString(prefix)
-		easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events2(out, in.GroupInfo)
+		easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events3(out, in.GroupInfo)
 	}
 	{
 		const prefix string = ",\"C2CTempMessageHead\":"
@@ -1030,7 +998,7 @@ func easyjson692db02bEncode2(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in *jlexer.Lexer, out *GroupInfo) {
+func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events3(in *jlexer.Lexer, out *GroupInfo) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1073,7 +1041,7 @@ func easyjson692db02bDecodeGithubComOpqOscOPQBotV2Events2(in *jlexer.Lexer, out 
 		in.Consumed()
 	}
 }
-func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events2(out *jwriter.Writer, in GroupInfo) {
+func easyjson692db02bEncodeGithubComOpqOscOPQBotV2Events3(out *jwriter.Writer, in GroupInfo) {
 	out.RawByte('{')
 	first := true
 	_ = first

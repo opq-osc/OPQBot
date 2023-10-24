@@ -2,9 +2,10 @@ package events
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 )
+
+//go:generate easyjson events.go
 
 type EventName string
 
@@ -48,10 +49,19 @@ type IEvent interface {
 	GetRawBytes() []byte
 	GetEventName() EventName
 	ParseGroupMsg() IGroupMsg
+	ParseFriendMsg() IFriendMsg
 	ParseLoginSuccessEvent() ILoginSuccess
 	ParseNetworkChangeEvent() INetworkChange
 	PraseGroupJoinEvent() IGroupJoinEvent
 	ExcludeBot() IEvent
+}
+type IFriendMsg interface {
+	ICommonMsg
+	GetFriendUin() int64
+	GetFriendUid() string
+	GetSenderUin() int64
+	ParseTextMsg() ITextMsg
+	ParsePicMsg() IPicMsg
 }
 type IGroupMsg interface {
 	ICommonMsg
@@ -63,13 +73,16 @@ type IGroupMsg interface {
 	GetSenderNick() string
 	GetSenderUin() int64
 	ParseTextMsg() ITextMsg
+	ParsePicMsg() IPicMsg
 	ContainedPic() bool
 	ContainedAt() bool
-	GetMsgSeq() int64
-	GetMsgRandom() int64
 	IsFromBot() bool
 }
 type ITextMsg interface {
+	GetTextContent() string
+}
+type IPicMsg interface {
+	GetPics() []Image
 	GetTextContent() string
 }
 type ILoginSuccess interface {
@@ -88,6 +101,8 @@ type ICommonMsg interface {
 	GetMsgUid() int64
 	GetMsgType() MsgType
 	GetMsgTime() int64
+	GetMsgSeq() int64
+	GetMsgRandom() int64
 }
 
 func New(data []byte) (IEvent, error) {
@@ -97,10 +112,8 @@ func New(data []byte) (IEvent, error) {
 		return nil, err
 	}
 	event.rawEvent = data
-	return event, json.Unmarshal(data, event)
+	return event, err
 }
-
-//go:generate easyjson events.go
 
 type GroupInfo struct {
 	GroupCard    string `json:"GroupCard"`
@@ -115,6 +128,12 @@ type UserInfo struct {
 	Nick string `json:"Nick"`
 	Uin  int64  `json:"Uin"`
 }
+type Image struct {
+	FileId   int64  `json:"FileId"`
+	FileMd5  string `json:"FileMd5"`
+	FileSize int    `json:"FileSize"`
+	Url      string `json:"Url"`
+}
 
 //easyjson:json
 type EventStruct struct {
@@ -126,9 +145,11 @@ type EventStruct struct {
 			Content *string `json:"Content,omitempty"`
 			MsgHead *struct {
 				FromUin            int64       `json:"FromUin"`
+				FromUid            string      `json:"FromUid"`
 				ToUin              int64       `json:"ToUin"`
 				FromType           int         `json:"FromType"`
 				SenderUin          int64       `json:"SenderUin"`
+				SenderUid          string      `json:"SenderUid"`
 				SenderNick         string      `json:"SenderNick"`
 				MsgType            int         `json:"MsgType"`
 				C2CCmd             int         `json:"C2cCmd"`
@@ -140,14 +161,9 @@ type EventStruct struct {
 				C2CTempMessageHead interface{} `json:"C2CTempMessageHead"`
 			} `json:"MsgHead,omitempty"`
 			MsgBody *struct {
-				SubMsgType int    `json:"SubMsgType"`
-				Content    string `json:"Content"`
-				Images     []struct {
-					FileId   int64  `json:"FileId"`
-					FileMd5  string `json:"FileMd5"`
-					FileSize int    `json:"FileSize"`
-					Url      string `json:"Url"`
-				} `json:"Images"`
+				SubMsgType int         `json:"SubMsgType"`
+				Content    string      `json:"Content"`
+				Images     []Image     `json:"Images"`
 				AtUinLists []UserInfo  `json:"AtUinLists"`
 				Video      interface{} `json:"Video"`
 				Voice      interface{} `json:"Voice"`
@@ -260,11 +276,20 @@ func (e *EventStruct) ParseTextMsg() ITextMsg {
 func (e *EventStruct) ParseGroupMsg() IGroupMsg {
 	return e
 }
+func (e *EventStruct) ParseFriendMsg() IFriendMsg {
+	return e
+}
 func (e *EventStruct) GetMsgUid() int64 {
 	return e.CurrentPacket.EventData.MsgHead.MsgUid
 }
 func (e *EventStruct) GetGroupUin() int64 {
 	return e.CurrentPacket.EventData.MsgHead.FromUin
+}
+func (e *EventStruct) GetFriendUin() int64 {
+	return e.CurrentPacket.EventData.MsgHead.FromUin
+}
+func (e *EventStruct) GetFriendUid() string {
+	return e.CurrentPacket.EventData.MsgHead.FromUid
 }
 func (e *EventStruct) GetGroupInfo() GroupInfo {
 	return e.CurrentPacket.EventData.MsgHead.GroupInfo
@@ -282,4 +307,11 @@ func (e *EventStruct) GetLoginSuccessBot() (nick string, uin int64) {
 	nick = *e.CurrentPacket.EventData.Nick
 	uin = *e.CurrentPacket.EventData.Uin
 	return
+}
+
+func (e *EventStruct) ParsePicMsg() IPicMsg {
+	return e
+}
+func (e *EventStruct) GetPics() []Image {
+	return e.CurrentPacket.EventData.MsgBody.Images
 }

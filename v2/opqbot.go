@@ -2,6 +2,13 @@ package OPQBot
 
 import (
 	"context"
+	"net/url"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"sync"
+	"time"
+
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/websocket"
 	"github.com/jasonlvhit/gocron"
@@ -9,12 +16,6 @@ import (
 	"github.com/opq-osc/OPQBot/v2/errors"
 	"github.com/opq-osc/OPQBot/v2/events"
 	"github.com/rotisserie/eris"
-	"net/url"
-	"os"
-	"os/signal"
-	"runtime/debug"
-	"sync"
-	"time"
 )
 
 type Core struct {
@@ -110,12 +111,13 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 				c.err = err
 				return
 			}
+			log.Debug(string(message))
 			event, err := events.New(message)
 			if err != nil {
 				log.Error("error:", eris.ToString(err, true))
 				continue
 			}
-			log.Debug(string(message))
+
 			var callbacks []events.EventCallbackFunc
 			c.lock.RLock()
 			callbacks = c.events[event.GetEventName()]
