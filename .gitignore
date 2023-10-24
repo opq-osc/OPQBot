@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-go.sum
+*.sum
 /.idea/
 /build/
 # Test binary, built with `go test -c`

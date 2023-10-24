@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"time"
+
 	"github.com/charmbracelet/log"
 	_ "github.com/mcoo/OPQBot/session/provider"
 	"github.com/opq-osc/OPQBot/v2"
 	"github.com/opq-osc/OPQBot/v2/apiBuilder"
 	"github.com/opq-osc/OPQBot/v2/events"
-	"time"
 )
 
 func main() {
