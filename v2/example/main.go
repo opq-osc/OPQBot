@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -34,6 +36,19 @@ func main() {
 						time.Sleep(time.Second * 1)
 						apiBuilder.New(apiUrl, event.GetCurrentQQ()).GroupManager().RevokeMsg().ToGUin(groupMsg.GetGroupUin()).MsgSeq(response.MsgSeq).MsgRandom(response.MsgTime).Do(ctx)
 					})
+				}
+				if text == "pic" {
+					p, err := os.ReadFile("example/test.jpg")
+					if err != nil {
+						panic(err)
+					}
+
+					pic, err := apiBuilder.New(apiUrl, event.GetCurrentQQ()).Upload().GroupPic().SetBase64Buf(base64.StdEncoding.EncodeToString(p)).DoUpload(ctx)
+					if err != nil {
+						panic(err)
+					}
+					log.Debug(pic)
+					apiBuilder.New(apiUrl, event.GetCurrentQQ()).SendMsg().GroupMsg().ToUin(groupMsg.GetGroupUin()).PicMsg(pic).Do(ctx)
 				}
 			}
 		}

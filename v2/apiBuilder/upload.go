@@ -1,8 +1,16 @@
 package apiBuilder
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
+	"github.com/charmbracelet/log"
 )
 
 type IUpload interface {
@@ -74,6 +82,8 @@ type File struct {
 	FileSize  int    `json:"FileSize"`
 	FileToken string `json:"FileToken"`
 	FileId    int64  `json:"FileId"`
+	Height    int    `json:"Height"`
+	Width     int    `json:"Width"`
 }
 
 func (b *Builder) DoUpload(ctx context.Context) (*File, error) {
@@ -81,6 +91,7 @@ func (b *Builder) DoUpload(ctx context.Context) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Debug(string(resp.GetOrigin()))
 	if !resp.Ok() {
 		return nil, errors.New(resp.ErrorMsg())
 	}
@@ -89,5 +100,23 @@ func (b *Builder) DoUpload(ctx context.Context) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
+	if b.CgiRequest.CommandId != nil && (*b.CgiRequest.CommandId == 1 || *b.CgiRequest.CommandId == 2) {
+		var picBytes []byte = nil
+		if b.CgiRequest.Base64Buf != nil {
+			picBytes, err = base64.StdEncoding.DecodeString(*b.CgiRequest.Base64Buf)
+			if err == nil {
+				h, w := GetPicHW(picBytes)
+				pic.Height = h
+				pic.Width = w
+			} else {
+				log.Debug(err)
+			}
+		}
+
+	}
 	return &pic, nil
+}
+func GetPicHW(pic []byte) (height, width int) {
+	img, _, _ := image.Decode(bytes.NewBuffer(pic))
+	return img.Bounds().Dy(), img.Bounds().Dx()
 }
