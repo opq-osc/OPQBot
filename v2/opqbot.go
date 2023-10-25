@@ -128,7 +128,7 @@ func (c *Core) ListenAndWait(ctx context.Context) (e error) {
 						if c.handlePanic != nil {
 							c.handlePanic(err)
 						} else {
-							log.Infof("event handle function panic: %s \n%s", err, string(debug.Stack()))
+							log.Debugf("event handle function panic: %s \n%s", err, string(debug.Stack()))
 						}
 					}
 				}()

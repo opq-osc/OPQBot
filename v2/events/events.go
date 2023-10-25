@@ -271,6 +271,9 @@ func (e *EventStruct) GetTextContent() string {
 	return e.CurrentPacket.EventData.MsgBody.Content
 }
 func (e *EventStruct) ParseTextMsg() ITextMsg {
+	if e.CurrentPacket.EventData.MsgBody == nil {
+		panic("非文本消息事件，解析失败")
+	}
 	return e
 }
 func (e *EventStruct) ParseGroupMsg() IGroupMsg {
@@ -310,6 +313,9 @@ func (e *EventStruct) GetLoginSuccessBot() (nick string, uin int64) {
 }
 
 func (e *EventStruct) ParsePicMsg() IPicMsg {
+	if e.CurrentPacket.EventData.MsgBody == nil || e.CurrentPacket.EventData.MsgBody.Images == nil {
+		panic("不包含图片，解析失败")
+	}
 	return e
 }
 func (e *EventStruct) GetPics() []Image {
